@@ -71,9 +71,15 @@ public static class RetrievalCardCompiler
         ArgumentNullException.ThrowIfNull(intelligence);
 
         var contractedSymbolIds = intelligence.Contracts.Select(contract => contract.SymbolId).ToHashSet();
+        var fileHashesByPath = structural.SourceFiles
+            .Where(file => file.ContentHash is not null)
+            .ToDictionary(file => file.RelativePath, file => (file.ContentHash!, file.HashAlgorithm!), StringComparer.Ordinal);
+        var symbolsById = structural.Symbols.ToDictionary(symbol => symbol.Id);
+
         var cards = new List<RetrievalCard>(
             intelligence.Contracts.Count + intelligence.Modules.Count + structural.Symbols.Count);
-        cards.AddRange(intelligence.Contracts.Select(CreateContractCard));
+        cards.AddRange(intelligence.Contracts.Select(contract =>
+            CreateContractCard(contract, symbolsById, fileHashesByPath)));
         cards.AddRange(intelligence.Modules.Select(CreateModuleCard));
 
         var topicsBySection = intelligence.DocumentedIntents
@@ -99,10 +105,11 @@ public static class RetrievalCardCompiler
                 _ => CreateSymbolCard(
                     symbol,
                     readersBySymbol.GetValueOrDefault(symbol.Id, []),
-                    readsBySymbol.GetValueOrDefault(symbol.Id, []))
+                    readsBySymbol.GetValueOrDefault(symbol.Id, []),
+                    fileHashesByPath)
             }));
 
-        cards.AddRange(CreateFileCards(structural, readsBySymbol));
+        cards.AddRange(CreateFileCards(structural, readsBySymbol, fileHashesByPath));
 
         return cards
             .OrderBy(card => card.Kind, StringComparer.Ordinal)
@@ -110,7 +117,10 @@ public static class RetrievalCardCompiler
             .ToArray();
     }
 
-    private static RetrievalCard CreateContractCard(ContractIntelligence contract)
+    private static RetrievalCard CreateContractCard(
+        ContractIntelligence contract,
+        Dictionary<StructuralId, SymbolFact> symbolsById,
+        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath)
     {
         var facets = new List<RetrievalFacet>
         {
@@ -123,6 +133,16 @@ public static class RetrievalCardCompiler
         if (contract.QualifiedName is not null)
         {
             facets.Add(new RetrievalFacet("qualifiedName", contract.QualifiedName));
+        }
+
+        // A contract is a symbol promoted to a richer card (see the exclusion below), not a different kind of
+        // entity, so `scout read`/`scout brief` resolve it to source the same way: its own declaration location.
+        if (symbolsById.TryGetValue(contract.SymbolId, out var symbol) && symbol.DeclarationLocations.Count > 0)
+        {
+            var location = symbol.DeclarationLocations[0];
+            facets.Add(new RetrievalFacet(KnownFacetNames.Line, location.StartLine.ToString(CultureInfo.InvariantCulture)));
+            facets.Add(new RetrievalFacet(KnownFacetNames.EndLine, location.EndLine.ToString(CultureInfo.InvariantCulture)));
+            AddStalenessFacets(facets, location.RelativePath, fileHashesByPath);
         }
 
         return new RetrievalCard(
@@ -155,7 +175,11 @@ public static class RetrievalCardCompiler
             detail: $"modules/{ToFileStem(module.Id)}.json");
     }
 
-    private static RetrievalCard CreateSymbolCard(SymbolFact symbol, string[] readers, string[] reads)
+    private static RetrievalCard CreateSymbolCard(
+        SymbolFact symbol,
+        string[] readers,
+        string[] reads,
+        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath)
     {
         var location = symbol.DeclarationLocations.Count > 0 ? symbol.DeclarationLocations[0] : null;
         var facets = new List<RetrievalFacet>
@@ -171,8 +195,12 @@ public static class RetrievalCardCompiler
         if (location is not null)
         {
             facets.Add(new RetrievalFacet(
-                "line",
+                KnownFacetNames.Line,
                 location.StartLine.ToString(CultureInfo.InvariantCulture)));
+            facets.Add(new RetrievalFacet(
+                KnownFacetNames.EndLine,
+                location.EndLine.ToString(CultureInfo.InvariantCulture)));
+            AddStalenessFacets(facets, location.RelativePath, fileHashesByPath);
         }
 
         var isPublic = string.Equals(symbol.Visibility, KnownVisibilities.Public, StringComparison.Ordinal);
@@ -189,6 +217,20 @@ public static class RetrievalCardCompiler
             symbol.QualifiedName is null ? neighbours : [symbol.QualifiedName, .. neighbours]);
     }
 
+    // Lets a caller holding only the retrieval index (never the much larger structural IR) tell whether the file
+    // a card points at has changed since compile, without reading anything but this card's own facets.
+    private static void AddStalenessFacets(
+        List<RetrievalFacet> facets,
+        string relativePath,
+        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath)
+    {
+        if (fileHashesByPath.TryGetValue(relativePath, out var hash))
+        {
+            facets.Add(new RetrievalFacet(KnownFacetNames.ContentHash, hash.Hash));
+            facets.Add(new RetrievalFacet(KnownFacetNames.HashAlgorithm, hash.Algorithm));
+        }
+    }
+
     private static RetrievalCard CreateDocumentationCard(SymbolFact section, string[] topics)
     {
         var location = section.DeclarationLocations.Count > 0 ? section.DeclarationLocations[0] : null;
@@ -196,7 +238,7 @@ public static class RetrievalCardCompiler
         if (location is not null)
         {
             facets.Add(new RetrievalFacet(
-                "line",
+                KnownFacetNames.Line,
                 location.StartLine.ToString(CultureInfo.InvariantCulture)));
         }
 
@@ -223,7 +265,8 @@ public static class RetrievalCardCompiler
     // is the file to open, not one of the many same-named symbols spread across the repository.
     private static IEnumerable<RetrievalCard> CreateFileCards(
         StructuralSnapshot structural,
-        IReadOnlyDictionary<StructuralId, string[]> readsBySymbol)
+        IReadOnlyDictionary<StructuralId, string[]> readsBySymbol,
+        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath)
     {
         var symbolsByFile = structural.Symbols
             .Where(symbol => symbol.DeclarationLocations.Count > 0)
@@ -256,6 +299,13 @@ public static class RetrievalCardCompiler
                 .Order(StringComparer.Ordinal)
                 .Take(MaxDeclarationsPerFile);
 
+            var fileFacets = new List<RetrievalFacet>
+            {
+                new("declarations", declared.Length.ToString(CultureInfo.InvariantCulture)),
+                new("texts", texts.Length.ToString(CultureInfo.InvariantCulture))
+            };
+            AddStalenessFacets(fileFacets, file.Key, fileHashesByPath);
+
             var separator = file.Key.LastIndexOf('/');
             yield return new RetrievalCard(
                 StructuralId.Create("file-card", file.Key).Value,
@@ -266,10 +316,7 @@ public static class RetrievalCardCompiler
                     CultureInfo.InvariantCulture,
                     $"source file {file.Key} with {declared.Length} declarations and {texts.Length} texts."),
                 FileImportance,
-                [
-                    new RetrievalFacet("declarations", declared.Length.ToString(CultureInfo.InvariantCulture)),
-                    new RetrievalFacet("texts", texts.Length.ToString(CultureInfo.InvariantCulture))
-                ],
+                fileFacets,
                 names.Concat(reads).Concat(texts.Take(MaxTextsPerFile).Select(text => text.Name)));
         }
     }
@@ -363,7 +410,7 @@ public static class RetrievalCardCompiler
         if (location is not null)
         {
             facets.Add(new RetrievalFacet(
-                "line",
+                KnownFacetNames.Line,
                 location.StartLine.ToString(CultureInfo.InvariantCulture)));
         }
 

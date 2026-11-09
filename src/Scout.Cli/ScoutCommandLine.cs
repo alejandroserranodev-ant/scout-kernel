@@ -10,7 +10,9 @@ internal static class ScoutCommandLine
         Usage:
           scout compile <repository> [--output <path>] [--no-index] [--update] [--embeddings ollama[:<model>]]
           scout update <repository> [--output <path>] [--no-index] [--embeddings ollama[:<model>]]
-          scout query "<intent>" --kernel <path> [--limit <n>] [--kind contract|module|symbol|documentation|text|file] [--json] [--no-embeddings]
+          scout query "<intent>" --kernel <path> [--limit <n>] [--kind contract|module|symbol|documentation|text|file] [--json] [--no-embeddings] [--profile]
+          scout brief "<task>" --kernel <path> [--repository <path>] [--limit <n>] [--max-tokens <n>] [--json] [--format compact]
+          scout read "<symbol>"|"<file>:<start>-<end>" --kernel <path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
           scout --version
           scout --help
 
@@ -36,6 +38,21 @@ internal static class ScoutCommandLine
           --json is the form to feed an agent; the default form is for reading.
           A kernel built with --embeddings is queried semantically when its model is available on this machine and
           lexically otherwise, with a notice saying which. --no-embeddings forces the lexical answer.
+          --profile prints how long opening the index and searching it took, to stderr.
+
+        brief
+          One call for "where do I edit for this task": the files/symbols retrieval finds, each with its line,
+          the names connected to it, and whether its recorded location is stale. --max-tokens (default 600)
+          drops the lowest-priority sites rather than returning something bigger than asked for. Prints "this
+          kernel checks no rule mechanically yet" rather than silently omitting a rules section, since this
+          kernel does not check any yet.
+
+        read
+          Returns the exact source lines a symbol or a file:start-end range names, reading the live repository —
+          a kernel never stores source bodies. --repository defaults to the kernel path with its trailing
+          ".scout" removed; pass it explicitly when the kernel was not compiled to that default location.
+          Warns when the source file has changed since compile, since the recorded line numbers may no longer
+          match. --max-lines caps how much a single call returns (default 400).
         """;
 
     internal static async Task<int> RunAsync(
@@ -78,6 +95,10 @@ internal static class ScoutCommandLine
                 UpdateCommand.Verb => await UpdateCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 QueryCommand.Verb => await QueryCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                BriefCommand.Verb => await BriefCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                ReadCommand.Verb => await ReadCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 var unknown => await UnknownCommandAsync(unknown, error).ConfigureAwait(false)
             };

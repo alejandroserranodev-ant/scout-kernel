@@ -24,9 +24,10 @@ Let each run finish the task, then find its transcript file:
 ~/.claude/projects/<project-slug>/<session-id>.jsonl
 ```
 
-(On this machine that's `C:\Users\tentu\.claude\projects\<project-slug>\<session-id>.jsonl` —
-the most recently modified file in that directory right after you finish a session is almost
-always the one you just ran.)
+(On Windows that's `%USERPROFILE%\.claude\projects\<project-slug>\<session-id>.jsonl`; on
+macOS/Linux, `~/.claude/projects/<project-slug>/<session-id>.jsonl`. The most recently
+modified file in that directory right after you finish a session is almost always the one you
+just ran.)
 
 Measure it:
 

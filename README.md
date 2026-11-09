@@ -254,7 +254,24 @@ $ scout query "invoice table css class" --kernel ./app.scout --kind contract --l
   detail: contracts/contract-6f75b892....json
 ```
 
-Use `--json` when an agent is the consumer.
+Use `--json` when an agent is the consumer. Add `--profile` to print how long opening the index and searching it took, to stderr.
+
+### One call for "where do I edit", and the exact lines once you know
+
+```text
+dotnet run --project src/Scout.Cli -- brief "<task, in your own words>" --kernel <kernel-path> [--repository <path>] [--limit <n>] [--max-tokens <n>] [--json] [--format compact]
+dotnet run --project src/Scout.Cli -- read "<symbol>"|"<file>:<start>-<end>" --kernel <kernel-path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
+```
+
+`brief` runs one retrieval call and returns edit sites (file, symbol, line, the names connected to it) within a
+token budget (`--max-tokens`, default 600) — the lowest-priority sites are dropped to fit, rather than
+returning something larger than asked for. It says plainly that it checks no rule mechanically yet, instead of
+silently omitting a rules section (that lands in a later phase).
+
+`read` returns exactly the lines a symbol or a `file:start-end` range names, read from the live repository —
+a kernel never stores source bodies. `--repository` defaults to the kernel path with its trailing `.scout`
+removed; pass it explicitly otherwise. Warns when the source file changed since compile, since the recorded
+line numbers may no longer match.
 
 ---
 
@@ -452,6 +469,8 @@ Scout is honest about its own gaps in the same way it is honest about a reposito
 - **Computed `className` is unreported.** It depends on runtime state; guessing it would produce a contract that is not real.
 - **Non-source manifests are not fingerprinted.** `RepositoryDiscovery` filters by extension, so editing `tsconfig.json` alone does not change the repository fingerprint.
 - **Trusted repositories are assumed.** MSBuild evaluation can execute analyzers and source generators from the target repository, and the sidecar reads its `tsconfig.json`. Process isolation is a future hardening boundary.
+- **A member's recorded line range may be its header only.** A class or interface's recorded location spans its whole body, because the analyzer takes it from the full declaring syntax node. A method, property, or other member currently comes from `ISymbol.Locations`, which Roslyn gives as the name token only — `scout read` says so (`MaybeHeaderOnly`) rather than silently returning a signature line as if it were the body. Fixing it means resolving each member to its declaring syntax node's span instead, which the C# analyzer does not do yet.
+- **Query latency is dominated by process startup, not the index.** Profiled against a 7,300-card/4,745-term kernel: opening the index and reading its (small) vocabulary takes well under 100ms combined; searching it runs 600–1000ms; everything before either of those — the .NET host starting and JIT-compiling, including the SQLite native interop — is 1–2 seconds on a Debug build and was the actual majority of the ~1.7–2.1s end-to-end figure quoted elsewhere, not a vocabulary table loaded in full on every query as originally suspected. A `dotnet publish -c Release -r <rid> --self-contained false -p:PublishReadyToRun=true` build cuts the warm-run total to ~1.9–2.3s; `PublishReadyToRun` is not the project's default because it is RID-specific and this project also ships as a cross-platform `dotnet tool` package, which cannot be. A long-lived process (the MCP server above) is what actually reaches the "<50ms warm" target, by never paying process startup per query at all.
 
 ### Roadmap, in the order that pays off
 

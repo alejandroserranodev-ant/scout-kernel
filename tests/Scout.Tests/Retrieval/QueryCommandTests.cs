@@ -52,4 +52,29 @@ public sealed class QueryCommandTests
         Assert.Equal("lexical", answer.GetProperty("Mode").GetString());
         Assert.Equal(JsonValueKind.Null, answer.GetProperty("Notice").ValueKind);
     }
+
+    [Fact]
+    public async Task NeverShowsTheFacetsThatExistOnlyForReadAndBriefToResolveASymbol()
+    {
+        using var repository = TemporaryRepository.CopyFixture("MinimalCSharpRepository", "QueryHidesInternalFacets");
+        var kernel = Path.Combine(repository.WorkspacePath, "billing.scout");
+        await new ScoutCompiler([new Scout.Analysis.CSharp.CSharpLanguageAnalyzer()], indexWriter: new SqliteRetrievalIndexWriter())
+            .CompileAsync(new ScoutCompileRequest(repository.RootPath, kernel))
+            .ConfigureAwait(true);
+
+        using var output = new StringWriter();
+        using var error = new StringWriter();
+        var exitCode = await QueryCommand
+            .RunAsync(["Invoice", "--kernel", kernel, "--json", "--limit", "10"], output, error)
+            .ConfigureAwait(true);
+
+        Assert.Equal(ExitCodes.Success, exitCode);
+        foreach (var hit in JsonDocument.Parse(output.ToString()).RootElement.GetProperty("Hits").EnumerateArray())
+        {
+            var facetNames = hit.GetProperty("Facets").EnumerateObject().Select(facet => facet.Name);
+            Assert.DoesNotContain("endLine", facetNames);
+            Assert.DoesNotContain("contentHash", facetNames);
+            Assert.DoesNotContain("hashAlgorithm", facetNames);
+        }
+    }
 }

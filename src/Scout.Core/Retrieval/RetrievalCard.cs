@@ -90,7 +90,7 @@ public sealed class RetrievalCard
     // boundary that governs it, so naming a consumer has to be enough to surface the contract above it.
     private string BuildSearchText() =>
         string.Join(' ', new[] { Kind, Name, RelativePath, Summary }
-            .Concat(Facets.Select(facet => facet.Value))
+            .Concat(Facets.Where(facet => !KnownFacetNames.InternalOnly.Contains(facet.Name)).Select(facet => facet.Value))
             .Concat(Related)
             .Where(part => !string.IsNullOrWhiteSpace(part)));
 }

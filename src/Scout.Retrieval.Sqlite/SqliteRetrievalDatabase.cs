@@ -214,6 +214,39 @@ public sealed class SqliteRetrievalDatabase : IDisposable
         return RetrievalRanking.Rank(candidates, limit);
     }
 
+    /// <summary>
+    /// Finds every card of a given kind whose name matches exactly (case-insensitively), without ranking or
+    /// embedding a query. For resolving a specific symbol or file to its source location, which does not need
+    /// (and should not pay for) similarity search.
+    /// </summary>
+    /// <param name="kind">The card kind. See <see cref="KnownCardKinds"/>.</param>
+    /// <param name="name">The exact name to match.</param>
+    /// <returns>Every matching card, ordered by path then name for a deterministic result.</returns>
+    public IReadOnlyList<RetrievalCard> FindByExactName(string kind, string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, kind, name, relative_path, summary, importance, detail, facets, related
+            FROM cards
+            WHERE kind = $kind AND name = $name COLLATE NOCASE
+            ORDER BY relative_path, name;
+            """;
+        command.Parameters.AddWithValue("$kind", kind);
+        command.Parameters.AddWithValue("$name", name);
+
+        var matches = new List<RetrievalCard>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            matches.Add(ReadCard(reader));
+        }
+
+        return matches;
+    }
+
     /// <inheritdoc />
     public void Dispose() => connection.Dispose();
 

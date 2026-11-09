@@ -38,6 +38,7 @@ internal static class QueryCommand
         var limit = DefaultLimit;
         var asJson = false;
         var lexicalOnly = false;
+        var profile = false;
 
         for (var index = 0; index < arguments.Count; index++)
         {
@@ -80,6 +81,10 @@ internal static class QueryCommand
                     lexicalOnly = true;
                     break;
 
+                case "--profile":
+                    profile = true;
+                    break;
+
                 default:
                     if (argument.StartsWith('-'))
                     {
@@ -116,11 +121,22 @@ internal static class QueryCommand
 
         // A kernel built with semantic vectors is queried with the model that built them when this machine has it;
         // otherwise it answers lexically and says so. A machine without any embedding service loses nothing else.
+        var openSw = System.Diagnostics.Stopwatch.StartNew();
         using var database = SqliteRetrievalDatabase.Open(
             indexPath,
             new LexicalEmbeddingModel(),
             modelId => lexicalOnly ? null : EmbeddingProviders.ForIndex(modelId));
+        openSw.Stop();
+        var searchSw = System.Diagnostics.Stopwatch.StartNew();
         var result = await database.SearchAsync(intent, limit, kind, cancellationToken).ConfigureAwait(false);
+        searchSw.Stop();
+
+        if (profile)
+        {
+            await error.WriteLineAsync(
+                $"profile: open={openSw.ElapsedMilliseconds}ms search={searchSw.ElapsedMilliseconds}ms " +
+                "(process startup/JIT before this command's own code runs is not included)").ConfigureAwait(false);
+        }
 
         if (result.Notice is not null && !lexicalOnly)
         {
@@ -158,8 +174,11 @@ internal static class QueryCommand
                     hit.Card.RelativePath,
                     hit.Card.Summary,
                     hit.Card.Detail,
-                    // A card may repeat a facet (a section about two topics has two "topic" values).
+                    // A card may repeat a facet (a section about two topics has two "topic" values). Facets that
+                    // exist only to let `scout read`/`scout brief` resolve a card to source (a line range, a
+                    // staleness hash) are never shown here: they answer "where exactly," not "what is this."
                     Facets = hit.Card.Facets
+                        .Where(facet => !KnownFacetNames.InternalOnly.Contains(facet.Name))
                         .GroupBy(facet => facet.Name, StringComparer.Ordinal)
                         .ToDictionary(
                             group => group.Key,
