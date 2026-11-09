@@ -1,0 +1,17 @@
+# Normalize everything to LF on checkin; let the OS render LF or CRLF as it prefers on checkout.
+* text=auto eol=lf
+
+# Known binary types: never touch line endings, never run text diffs.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.db binary
+*.dll binary
+*.exe binary
+*.zip binary
+*.pdf binary

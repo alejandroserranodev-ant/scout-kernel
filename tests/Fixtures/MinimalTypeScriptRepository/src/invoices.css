@@ -1,0 +1,35 @@
+:root {
+  --invoice-border: #d0d7de;
+  --invoice-emphasis: #0969da;
+  --invoice-padding: 8px;
+}
+
+.invoice-table {
+  border: 1px solid var(--invoice-border);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* The row keeps its own border so tables can be nested. */
+.invoice-row {
+  border-bottom: 1px solid var(--invoice-border);
+}
+
+.invoice-cell {
+  padding: var(--invoice-padding);
+}
+
+.invoice-total {
+  color: var(--invoice-emphasis);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .invoice-cell {
+    padding: calc(var(--invoice-padding) / 2);
+  }
+}
+
+.invoice-empty[data-state="empty"]::after {
+  content: ".not-a-class";
+}

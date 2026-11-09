@@ -1,0 +1,30 @@
+---
+description: Scout agent pipeline (Architect/Developer/Reviewer/QA) via scout-agents
+alwaysApply: false
+---
+
+# Adapter: Cursor (.cursor/rules/*.mdc)
+
+Cursor loads `.cursor/rules/*.mdc` files as project rules. Save this file under
+`.cursor/rules/` (adjust the path in the commands below if `scout-agents/` is not at
+`.claude/skills/scout-agents/` in this project) to make Cursor drive the same
+scout-agents pipeline the Claude Code skill uses. This is a template written from
+Cursor's documented rules convention — it has not been run inside Cursor.
+
+When asked to run the Scout agent pipeline for a task:
+
+1. Locate the kernel: `node .claude/skills/scout-agents/bin/scout-agents.mjs resolve-kernel --from .`
+   More than one candidate reported -> ask which one instead of guessing.
+2. Start: `node .claude/skills/scout-agents/bin/scout-agents.mjs start --kernel "<kernel>" --task "<task>"`.
+3. As the current role: open only its `reads` files, run its `retrieval` commands
+   (real `scout query` calls) before opening any source file, and treat every
+   `obligations` entry as a hard constraint.
+4. Match the situation to a `handoffs` condition:
+   - **sequential**: `advance --kernel "<kernel>" --session <id> --to <roleId> --note "<decision>"`, then continue as the new role.
+   - **subsession**: Cursor has no documented nested-agent-that-returns primitive, so
+     simulate it: `open-subsession --kernel "<kernel>" --session <id> --to <roleId> --note "<question>"`,
+     answer strictly as that role, then `return --kernel "<kernel>" --session <id> --result "<answer>"`
+     and resume the original role.
+5. No handoff applies (typically QA, nothing failing): `finish --kernel "<kernel>" --session <id> --note "<summary>"`.
+
+Use `--json` on any command for structured output; `log --kernel "<kernel>" --session <id>` recovers full handoff history.

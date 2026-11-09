@@ -1,0 +1,34 @@
+[
+  {
+    "query": "create a new order",
+    "expectedFiles": ["src/Orders/OrderService.cs"]
+  },
+  {
+    "query": "cancel an order",
+    "expectedFiles": ["src/Orders/OrderService.cs"]
+  },
+  {
+    "query": "compute the total for an invoice",
+    "expectedFiles": ["src/Billing/InvoiceCalculator.cs"]
+  },
+  {
+    "query": "format a currency amount for display",
+    "expectedFiles": ["web/src/utils/formatCurrency.ts"]
+  },
+  {
+    "query": "badge that shows order status",
+    "expectedFiles": ["web/src/components/OrderStatusBadge.tsx"]
+  },
+  {
+    "query": "fetch an order from the API",
+    "expectedFiles": ["web/src/api/ordersClient.ts"]
+  },
+  {
+    "query": "save an order in the repository",
+    "expectedFiles": ["src/Orders/OrderRepository.cs"]
+  },
+  {
+    "query": "apply a discount percentage",
+    "expectedFiles": ["src/Billing/InvoiceCalculator.cs"]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "name": "scout-ts-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Emits language-neutral Scout IR from TypeScript, JavaScript and React sources.",
+  "main": "scout-ts-sidecar.mjs",
+  "dependencies": {
+    "typescript": "5.9.3"
+  }
+}

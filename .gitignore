@@ -1,0 +1,19 @@
+.idea/
+.vs/
+**/bin/
+**/obj/
+TestResults/
+*.user
+*.scout/
+node_modules/
+
+# Machine-local benchmark/eval config and corpora: may point at or embed a private repository's
+# paths and golden-set answers, so they never leave this machine. See tooling/*/local/README.md.
+tooling/eval/local/*
+!tooling/eval/local/README.md
+tooling/bench/local/*
+!tooling/bench/local/README.md
+
+# Personal data that should never have been under this root to begin with.
+Alejandro_Serrano_CV.pdf
+Alejandro_Serrano_CV.tex

@@ -1,0 +1,6 @@
+{
+  "kernelPath": "repo.scout",
+  "goldenSetPath": "golden.json",
+  "limit": 5,
+  "minimumFullRecallRate": 1.0
+}

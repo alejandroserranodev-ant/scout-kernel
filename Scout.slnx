@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Scout.Analysis.CSharp/Scout.Analysis.CSharp.csproj" />
+    <Project Path="src/Scout.Analysis.Css/Scout.Analysis.Css.csproj" />
+    <Project Path="src/Scout.Analysis.Markdown/Scout.Analysis.Markdown.csproj" />
+    <Project Path="src/Scout.Analysis.TypeScript/Scout.Analysis.TypeScript.csproj" />
+    <Project Path="src/Scout.Cli/Scout.Cli.csproj" />
+    <Project Path="src/Scout.Core/Scout.Core.csproj" />
+    <Project Path="src/Scout.Embeddings.Ollama/Scout.Embeddings.Ollama.csproj" />
+    <Project Path="src/Scout.Retrieval.Sqlite/Scout.Retrieval.Sqlite.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Scout.Tests/Scout.Tests.csproj" />
+  </Folder>
+</Solution>

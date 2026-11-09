@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Scout.Core\Scout.Core.csproj" />
+    <ProjectReference Include="..\Scout.Analysis.CSharp\Scout.Analysis.CSharp.csproj" />
+    <ProjectReference Include="..\Scout.Analysis.TypeScript\Scout.Analysis.TypeScript.csproj" />
+    <ProjectReference Include="..\Scout.Analysis.Css\Scout.Analysis.Css.csproj" />
+    <ProjectReference Include="..\Scout.Analysis.Markdown\Scout.Analysis.Markdown.csproj" />
+    <ProjectReference Include="..\Scout.Retrieval.Sqlite\Scout.Retrieval.Sqlite.csproj" />
+    <ProjectReference Include="..\Scout.Embeddings.Ollama\Scout.Embeddings.Ollama.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Scout.Tests" />
+  </ItemGroup>
+  <PropertyGroup>
+    <AssemblyName>scout</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>scout</ToolCommandName>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Ensures Roslyn's out-of-process build host is copied beside the executable. -->
+    <PackageReference Include="Microsoft.Build.Framework" Version="18.0.2" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.9.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

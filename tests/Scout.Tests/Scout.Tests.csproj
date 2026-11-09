@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Scout.Core\Scout.Core.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Retrieval.Sqlite\Scout.Retrieval.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Embeddings.Ollama\Scout.Embeddings.Ollama.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Analysis.CSharp\Scout.Analysis.CSharp.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Analysis.TypeScript\Scout.Analysis.TypeScript.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Cli\Scout.Cli.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Analysis.Css\Scout.Analysis.Css.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Analysis.Markdown\Scout.Analysis.Markdown.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Fixtures\**\*" Link="Fixtures\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
