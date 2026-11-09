@@ -1,0 +1,78 @@
+Corpus: synthetic-orders (21 tasks)
+
+t01 [concrete] "create a new order"
+  Arm A (no Scout): hit   7 call(s)  ~863 tok
+  Arm B (Scout):    hit   1 call(s)  ~1400 tok  2007ms
+t02 [concrete] "cancel an order"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1360 tok  1875ms
+t03 [concrete] "save an order in the repository"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1210 tok  2282ms
+t04 [concrete] "find an order by its id"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1457 tok  1302ms
+t05 [concrete] "compute the total for an invoice"
+  Arm A (no Scout): hit   2 call(s)  ~135 tok
+  Arm B (Scout):    hit   1 call(s)  ~874 tok  1676ms
+t06 [concrete] "apply a discount percentage"
+  Arm A (no Scout): hit   3 call(s)  ~226 tok
+  Arm B (Scout):    hit   1 call(s)  ~628 tok  1539ms
+t07 [concrete] "format a currency amount for display"
+  Arm A (no Scout): hit   2 call(s)  ~92 tok
+  Arm B (Scout):    hit   1 call(s)  ~477 tok  1813ms
+t08 [concrete] "format a percentage for display"
+  Arm A (no Scout): hit   3 call(s)  ~226 tok
+  Arm B (Scout):    hit   1 call(s)  ~643 tok  1664ms
+t09 [concrete] "fetch an order from the API"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1219 tok  1812ms
+t10 [concrete] "send a cancel request to the API"
+  Arm A (no Scout): hit   4 call(s)  ~539 tok
+  Arm B (Scout):    hit   1 call(s)  ~1233 tok  1898ms
+t11 [concrete] "badge component that shows order status"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1249 tok  1579ms
+t12 [concrete] "the shape of an order returned by the API"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1342 tok  1436ms
+t13 [concrete] "the possible statuses an order can have"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1229 tok  1698ms
+t14 [concrete] "the fields that make up an order line"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1385 tok  1931ms
+t15 [vague] "orders are broken, customers cannot check out"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1265 tok  1629ms
+t16 [vague] "something about money is wrong on invoices"
+  Arm A (no Scout): MISS  1 call(s)  ~0 tok
+  Arm B (Scout):    MISS  1 call(s)  ~34 tok  1187ms
+t17 [vague] "the status badge looks wrong"
+  Arm A (no Scout): hit   4 call(s)  ~539 tok
+  Arm B (Scout):    hit   1 call(s)  ~1247 tok  1429ms
+t18 [vague] "orders are not saving"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1259 tok  1522ms
+t19 [cross-cutting] "add a new order status and update every place that displays order status"
+  Arm A (no Scout): hit   7 call(s)  ~863 tok
+  Arm B (Scout):    hit   1 call(s)  ~1391 tok  2918ms
+t20 [cross-cutting] "change how an order total is calculated and displayed"
+  Arm A (no Scout): MISS  6 call(s)  ~772 tok
+  Arm B (Scout):    MISS  1 call(s)  ~1255 tok  1838ms
+t21 [cross-cutting] "rename the cancel order operation across backend and frontend"
+  Arm A (no Scout): hit   6 call(s)  ~772 tok
+  Arm B (Scout):    hit   1 call(s)  ~1494 tok  1582ms
+
+Tasks:                 21
+Arm A hit rate:         90.5%
+Arm B hit rate:         90.5%
+Arm A tokens (approx):  12740
+Arm B tokens (approx):  23648
+Token savings rate:     -85.6%
+Arm B avg latency:      1743.6ms
+
+Decision rule (minimum 30% savings at equal-or-better accuracy): STOP_AND_REPORT
+  (This rule is enforced after Phase 3, once scout brief/read exist; at this stage it is informational.)
+
+Wrote tooling/bench/reports/synthetic-baseline-2026-11-09.json

@@ -1,0 +1,28 @@
+{
+  "corpusName": "synthetic-orders",
+  "repositoryPath": "../../../eval/corpora/synthetic/repo",
+  "kernelPath": "../../../eval/corpora/synthetic/repo.scout",
+  "tasks": [
+    { "id": "t01", "type": "concrete", "query": "create a new order", "expectedFiles": ["src/Orders/OrderService.cs"] },
+    { "id": "t02", "type": "concrete", "query": "cancel an order", "expectedFiles": ["src/Orders/OrderService.cs"] },
+    { "id": "t03", "type": "concrete", "query": "save an order in the repository", "expectedFiles": ["src/Orders/OrderRepository.cs"] },
+    { "id": "t04", "type": "concrete", "query": "find an order by its id", "expectedFiles": ["src/Orders/OrderRepository.cs"] },
+    { "id": "t05", "type": "concrete", "query": "compute the total for an invoice", "expectedFiles": ["src/Billing/InvoiceCalculator.cs"] },
+    { "id": "t06", "type": "concrete", "query": "apply a discount percentage", "expectedFiles": ["src/Billing/InvoiceCalculator.cs"] },
+    { "id": "t07", "type": "concrete", "query": "format a currency amount for display", "expectedFiles": ["web/src/utils/formatCurrency.ts"] },
+    { "id": "t08", "type": "concrete", "query": "format a percentage for display", "expectedFiles": ["web/src/utils/formatCurrency.ts"] },
+    { "id": "t09", "type": "concrete", "query": "fetch an order from the API", "expectedFiles": ["web/src/api/ordersClient.ts"] },
+    { "id": "t10", "type": "concrete", "query": "send a cancel request to the API", "expectedFiles": ["web/src/api/ordersClient.ts"] },
+    { "id": "t11", "type": "concrete", "query": "badge component that shows order status", "expectedFiles": ["web/src/components/OrderStatusBadge.tsx"] },
+    { "id": "t12", "type": "concrete", "query": "the shape of an order returned by the API", "expectedFiles": ["web/src/api/ordersClient.ts"] },
+    { "id": "t13", "type": "concrete", "query": "the possible statuses an order can have", "expectedFiles": ["src/Orders/OrderService.cs"] },
+    { "id": "t14", "type": "concrete", "query": "the fields that make up an order line", "expectedFiles": ["src/Orders/OrderService.cs"] },
+    { "id": "t15", "type": "vague", "query": "orders are broken, customers cannot check out", "expectedFiles": ["src/Orders/OrderService.cs", "src/Orders/OrderRepository.cs"] },
+    { "id": "t16", "type": "vague", "query": "something about money is wrong on invoices", "expectedFiles": ["src/Billing/InvoiceCalculator.cs"] },
+    { "id": "t17", "type": "vague", "query": "the status badge looks wrong", "expectedFiles": ["web/src/components/OrderStatusBadge.tsx"] },
+    { "id": "t18", "type": "vague", "query": "orders are not saving", "expectedFiles": ["src/Orders/OrderService.cs", "src/Orders/OrderRepository.cs"] },
+    { "id": "t19", "type": "cross-cutting", "query": "add a new order status and update every place that displays order status", "expectedFiles": ["src/Orders/OrderService.cs", "web/src/components/OrderStatusBadge.tsx"] },
+    { "id": "t20", "type": "cross-cutting", "query": "change how an order total is calculated and displayed", "expectedFiles": ["src/Billing/InvoiceCalculator.cs", "web/src/utils/formatCurrency.ts"] },
+    { "id": "t21", "type": "cross-cutting", "query": "rename the cancel order operation across backend and frontend", "expectedFiles": ["src/Orders/OrderService.cs", "web/src/api/ordersClient.ts"] }
+  ]
+}

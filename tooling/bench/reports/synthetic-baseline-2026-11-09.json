@@ -1,0 +1,905 @@
+{
+  "corpusName": "synthetic-orders",
+  "generatedAt": "2026-11-09T16:00:25.303Z",
+  "config": {
+    "charsPerToken": 4,
+    "resultLimit": 8,
+    "minimumTokenSavingsRate": 0.3,
+    "grepResultCharsPerMatch": 80,
+    "armAChunkThresholdChars": 4000,
+    "armAChunkSizeChars": 2000,
+    "sourceFileExtensions": [
+      ".cs",
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".css",
+      ".md",
+      ".json"
+    ],
+    "excludedDirectoryNames": [
+      "bin",
+      "obj",
+      "node_modules",
+      ".git",
+      ".internal"
+    ],
+    "stopwords": [
+      "a",
+      "an",
+      "the",
+      "and",
+      "or",
+      "of",
+      "to",
+      "in",
+      "on",
+      "for",
+      "with",
+      "is",
+      "are",
+      "be",
+      "do",
+      "does",
+      "did",
+      "that",
+      "this",
+      "it",
+      "its",
+      "we",
+      "us",
+      "our",
+      "about",
+      "how",
+      "what",
+      "where",
+      "when",
+      "why",
+      "who",
+      "can",
+      "could",
+      "should",
+      "would",
+      "all",
+      "every",
+      "across",
+      "everywhere",
+      "something",
+      "somewhere"
+    ]
+  },
+  "results": [
+    {
+      "id": "t01",
+      "type": "concrete",
+      "query": "create a new order",
+      "armA": {
+        "calls": 7,
+        "chars": 3452,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "searchTerms": [
+          "create",
+          "new",
+          "order"
+        ],
+        "tokensApprox": 863
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5601,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs"
+        ],
+        "elapsedMs": 2007.4440000000002,
+        "tokensApprox": 1400.25
+      }
+    },
+    {
+      "id": "t02",
+      "type": "concrete",
+      "query": "cancel an order",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "cancel",
+          "order"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5438,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "web/src/api/ordersClient.ts",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1875.3237000000004,
+        "tokensApprox": 1359.5
+      }
+    },
+    {
+      "id": "t03",
+      "type": "concrete",
+      "query": "save an order in the repository",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "save",
+          "order",
+          "repository"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4841,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "elapsedMs": 2282.2326000000003,
+        "tokensApprox": 1210.25
+      }
+    },
+    {
+      "id": "t04",
+      "type": "concrete",
+      "query": "find an order by its id",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "find",
+          "order",
+          "by",
+          "id"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5829,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1301.9597999999996,
+        "tokensApprox": 1457.25
+      }
+    },
+    {
+      "id": "t05",
+      "type": "concrete",
+      "query": "compute the total for an invoice",
+      "armA": {
+        "calls": 2,
+        "chars": 539,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs"
+        ],
+        "searchTerms": [
+          "compute",
+          "total",
+          "invoice"
+        ],
+        "tokensApprox": 134.75
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 3495,
+        "hit": true,
+        "returnedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1675.8338000000003,
+        "tokensApprox": 873.75
+      }
+    },
+    {
+      "id": "t06",
+      "type": "concrete",
+      "query": "apply a discount percentage",
+      "armA": {
+        "calls": 3,
+        "chars": 905,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "searchTerms": [
+          "apply",
+          "discount",
+          "percentage"
+        ],
+        "tokensApprox": 226.25
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 2513,
+        "hit": true,
+        "returnedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "web/src/utils/formatCurrency.ts",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "elapsedMs": 1538.5107000000007,
+        "tokensApprox": 628.25
+      }
+    },
+    {
+      "id": "t07",
+      "type": "concrete",
+      "query": "format a currency amount for display",
+      "armA": {
+        "calls": 2,
+        "chars": 366,
+        "hit": true,
+        "matchedFiles": [
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "searchTerms": [
+          "format",
+          "currency",
+          "amount",
+          "display"
+        ],
+        "tokensApprox": 91.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 1906,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/utils/formatCurrency.ts",
+          "web/src/utils/formatCurrency.ts",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "elapsedMs": 1813.2554,
+        "tokensApprox": 476.5
+      }
+    },
+    {
+      "id": "t08",
+      "type": "concrete",
+      "query": "format a percentage for display",
+      "armA": {
+        "calls": 3,
+        "chars": 905,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "searchTerms": [
+          "format",
+          "percentage",
+          "display"
+        ],
+        "tokensApprox": 226.25
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 2573,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/utils/formatCurrency.ts",
+          "web/src/utils/formatCurrency.ts",
+          "web/src/utils/formatCurrency.ts",
+          "src/Billing/InvoiceCalculator.cs"
+        ],
+        "elapsedMs": 1663.6370000000006,
+        "tokensApprox": 643.25
+      }
+    },
+    {
+      "id": "t09",
+      "type": "concrete",
+      "query": "fetch an order from the API",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "fetch",
+          "order",
+          "from",
+          "api"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4874,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts"
+        ],
+        "elapsedMs": 1812.3464999999997,
+        "tokensApprox": 1218.5
+      }
+    },
+    {
+      "id": "t10",
+      "type": "concrete",
+      "query": "send a cancel request to the API",
+      "armA": {
+        "calls": 4,
+        "chars": 2154,
+        "hit": true,
+        "matchedFiles": [
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "send",
+          "cancel",
+          "request",
+          "api"
+        ],
+        "tokensApprox": 538.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4930,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts"
+        ],
+        "elapsedMs": 1898.2144000000008,
+        "tokensApprox": 1232.5
+      }
+    },
+    {
+      "id": "t11",
+      "type": "concrete",
+      "query": "badge component that shows order status",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "badge",
+          "component",
+          "shows",
+          "order",
+          "status"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4994,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1578.8150999999998,
+        "tokensApprox": 1248.5
+      }
+    },
+    {
+      "id": "t12",
+      "type": "concrete",
+      "query": "the shape of an order returned by the API",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "shape",
+          "order",
+          "returned",
+          "by",
+          "api"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5369,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "web/src/api/ordersClient.ts"
+        ],
+        "elapsedMs": 1436.4203000000016,
+        "tokensApprox": 1342.25
+      }
+    },
+    {
+      "id": "t13",
+      "type": "concrete",
+      "query": "the possible statuses an order can have",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "possible",
+          "statuses",
+          "order",
+          "have"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4915,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Orders/OrderService.cs",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "elapsedMs": 1697.7705999999998,
+        "tokensApprox": 1228.75
+      }
+    },
+    {
+      "id": "t14",
+      "type": "concrete",
+      "query": "the fields that make up an order line",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "fields",
+          "make",
+          "up",
+          "order",
+          "line"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5541,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1931.0155000000013,
+        "tokensApprox": 1385.25
+      }
+    },
+    {
+      "id": "t15",
+      "type": "vague",
+      "query": "orders are broken, customers cannot check out",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "orders",
+          "broken",
+          "customers",
+          "cannot",
+          "check",
+          "out"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5058,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1628.8064000000013,
+        "tokensApprox": 1264.5
+      }
+    },
+    {
+      "id": "t16",
+      "type": "vague",
+      "query": "something about money is wrong on invoices",
+      "armA": {
+        "calls": 1,
+        "chars": 0,
+        "hit": false,
+        "matchedFiles": [],
+        "searchTerms": [
+          "money",
+          "wrong",
+          "invoices"
+        ],
+        "tokensApprox": 0
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 134,
+        "hit": false,
+        "returnedFiles": [],
+        "elapsedMs": 1186.9549000000006,
+        "tokensApprox": 33.5
+      }
+    },
+    {
+      "id": "t17",
+      "type": "vague",
+      "query": "the status badge looks wrong",
+      "armA": {
+        "calls": 4,
+        "chars": 2154,
+        "hit": true,
+        "matchedFiles": [
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "status",
+          "badge",
+          "looks",
+          "wrong"
+        ],
+        "tokensApprox": 538.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 4986,
+        "hit": true,
+        "returnedFiles": [
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1428.832699999999,
+        "tokensApprox": 1246.5
+      }
+    },
+    {
+      "id": "t18",
+      "type": "vague",
+      "query": "orders are not saving",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "orders",
+          "not",
+          "saving"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5034,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs"
+        ],
+        "elapsedMs": 1521.7445999999982,
+        "tokensApprox": 1258.5
+      }
+    },
+    {
+      "id": "t19",
+      "type": "cross-cutting",
+      "query": "add a new order status and update every place that displays order status",
+      "armA": {
+        "calls": 7,
+        "chars": 3452,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx",
+          "web/src/utils/formatCurrency.ts"
+        ],
+        "searchTerms": [
+          "add",
+          "new",
+          "order",
+          "status",
+          "update",
+          "place",
+          "displays"
+        ],
+        "tokensApprox": 863
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5562,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Orders/OrderService.cs",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "elapsedMs": 2917.5885000000017,
+        "tokensApprox": 1390.5
+      }
+    },
+    {
+      "id": "t20",
+      "type": "cross-cutting",
+      "query": "change how an order total is calculated and displayed",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": false,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "change",
+          "order",
+          "total",
+          "calculated",
+          "displayed"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5020,
+        "hit": false,
+        "returnedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Billing/InvoiceCalculator.cs",
+          "web/tsconfig.json",
+          "web/src/components/OrderStatusBadge.tsx",
+          "src/Synthetic.csproj",
+          "web/src/api/ordersClient.ts"
+        ],
+        "elapsedMs": 1838.390800000001,
+        "tokensApprox": 1255
+      }
+    },
+    {
+      "id": "t21",
+      "type": "cross-cutting",
+      "query": "rename the cancel order operation across backend and frontend",
+      "armA": {
+        "calls": 6,
+        "chars": 3086,
+        "hit": true,
+        "matchedFiles": [
+          "src/Billing/InvoiceCalculator.cs",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/components/OrderStatusBadge.tsx"
+        ],
+        "searchTerms": [
+          "rename",
+          "cancel",
+          "order",
+          "operation",
+          "backend",
+          "frontend"
+        ],
+        "tokensApprox": 771.5
+      },
+      "armB": {
+        "calls": 1,
+        "chars": 5977,
+        "hit": true,
+        "returnedFiles": [
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderService.cs",
+          "web/src/api/ordersClient.ts",
+          "web/src/api/ordersClient.ts",
+          "src/Orders/OrderRepository.cs",
+          "src/Orders/OrderService.cs",
+          "src/Orders/OrderRepository.cs"
+        ],
+        "elapsedMs": 1581.538400000005,
+        "tokensApprox": 1494.25
+      }
+    }
+  ],
+  "summary": {
+    "taskCount": 21,
+    "totalArmATokens": 12739.75,
+    "totalArmBTokens": 23647.5,
+    "armAHitRate": 0.9047619047619048,
+    "armBHitRate": 0.9047619047619048,
+    "savingsRate": -0.856198120057301,
+    "averageArmBLatencyMs": 1743.6493190476197,
+    "decision": {
+      "minimumTokenSavingsRate": 0.3,
+      "meetsThreshold": false,
+      "equalOrBetterAccuracy": true,
+      "verdict": "STOP_AND_REPORT"
+    }
+  }
+}

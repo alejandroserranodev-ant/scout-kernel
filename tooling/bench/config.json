@@ -1,0 +1,16 @@
+{
+  "charsPerToken": 4,
+  "resultLimit": 8,
+  "minimumTokenSavingsRate": 0.3,
+  "grepResultCharsPerMatch": 80,
+  "armAChunkThresholdChars": 4000,
+  "armAChunkSizeChars": 2000,
+  "sourceFileExtensions": [".cs", ".ts", ".tsx", ".js", ".jsx", ".css", ".md", ".json"],
+  "excludedDirectoryNames": ["bin", "obj", "node_modules", ".git", ".internal"],
+  "stopwords": [
+    "a", "an", "the", "and", "or", "of", "to", "in", "on", "for", "with", "is", "are", "be",
+    "do", "does", "did", "that", "this", "it", "its", "we", "us", "our", "about", "how",
+    "what", "where", "when", "why", "who", "can", "could", "should", "would", "all", "every",
+    "across", "everywhere", "something", "somewhere"
+  ]
+}

@@ -15,8 +15,8 @@
 // local config (see tooling/eval/local/README.md).
 
 import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { resolveScoutCommand as resolveCommand, runScoutQuery } from '../lib/scout-cli.mjs';
 
 const DEFAULT_RESULT_LIMIT = 8;
 
@@ -54,32 +54,18 @@ function resolveFromConfig(configDir, maybeRelative) {
 }
 
 function resolveScoutCommand(cliValue, config) {
-  const raw = cliValue ?? process.env.SCOUT_COMMAND ?? config.scoutCommand;
-  if (!raw) {
+  const command = resolveCommand(cliValue, config.scoutCommand);
+  if (!command) {
     fail(
       'no scout command: pass --scout-command "dotnet path/to/scout.dll", set SCOUT_COMMAND, ' +
         'or add "scoutCommand" to a git-ignored local config.',
     );
   }
-  return Array.isArray(raw) ? raw : raw.split(' ').filter((part) => part.length > 0);
-}
-
-function runQuery(command, kernelPath, query, limit, kind) {
-  const args = [...command.slice(1), 'query', query, '--kernel', kernelPath, '--limit', String(limit), '--json'];
-  if (kind) {
-    args.push('--kind', kind);
-  }
-  const result = spawnSync(command[0], args, { encoding: 'utf8' });
-  if (result.status !== 0) {
-    throw new Error(`scout query failed (exit ${result.status}): ${result.stderr || result.stdout}`);
-  }
-  return JSON.parse(result.stdout);
+  return command;
 }
 
 function evaluateCase(command, kernelPath, limit, testCase) {
-  const startedAt = performance.now();
-  const response = runQuery(command, kernelPath, testCase.query, limit, testCase.kind);
-  const elapsedMs = performance.now() - startedAt;
+  const { parsed: response, elapsedMs } = runScoutQuery(command, kernelPath, testCase.query, limit, testCase.kind);
   const returnedPaths = response.Hits.map((hit) => hit.RelativePath);
   const returnedSet = new Set(returnedPaths);
   const expected = testCase.expectedFiles;
