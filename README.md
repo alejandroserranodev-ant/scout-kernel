@@ -273,6 +273,37 @@ a kernel never stores source bodies. `--repository` defaults to the kernel path 
 removed; pass it explicitly otherwise. Warns when the source file changed since compile, since the recorded
 line numbers may no longer match.
 
+`neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"]` is provisional: it
+walks the reader/read names a card already records. It cannot tell edge kind or direction.
+
+### Use Scout from Claude Code
+
+`scout mcp` runs a stdio MCP server exposing exactly three tools — `scout_brief`, `scout_read`,
+`scout_neighbors` — each backed by the same code as its CLI command. Register it either way:
+
+```text
+claude mcp add scout -- scout mcp
+```
+
+```json
+{ "mcpServers": { "scout": { "command": "scout", "args": ["mcp"] } } }
+```
+
+(the JSON is a `.mcp.json` at the project root). Each tool takes the kernel path as an argument.
+
+`scout install claude --kernel <path> [--project|--user] [--hook-matcher <pattern>] [--dry-run] [--uninstall]`
+wires a kernel into Claude Code without hand-editing anything:
+
+- a CLAUDE.md section of at most 15 lines between `<!-- scout:begin -->` and `<!-- scout:end -->`;
+- a PreToolUse hook (`.claude/scout-hooks/`) that never blocks and prints at most 3 lines;
+- copies of the kernel's `scout-agents` and `scout-query` skills under `.claude/skills/`;
+- an install manifest (`.claude/scout-install-manifest.json`) recording what was written.
+
+It is idempotent (a second run changes nothing), `--dry-run` writes nothing, and `--uninstall` removes only
+what the manifest recorded, leaving your own CLAUDE.md and settings content intact. `scout update` resyncs the
+installed skills when a manifest for that kernel is present. `--project` is the default; `--user` targets the
+home directory's `.claude`.
+
 ---
 
 ## How retrieval works
@@ -449,7 +480,6 @@ Scout is honest about its own gaps in the same way it is honest about a reposito
 | Capability | Status | What it would take |
 | --- | --- | --- |
 | **Agent runtime** | Not built — **and deliberately so** | The agent you already use (Copilot CLI, Cursor, Claude Code) *is* the runtime. It already has an LLM, function calling, sub-agents, and state. Building another would duplicate it and lock you in. |
-| **MCP server** | **The real gap** | Exposing `scout_query` as a tool so the runtime you already have can call Scout. This is the one piece that closes the loop. |
 | **Skills** | Not built | Requires a `Scout.Analysis.Git` analyzer to derive procedures from commit history. |
 | **Concerns** | Not built | Cross-cutting aspects (logging, auth, caching) as first-class claims. |
 | **Flows** | Not built | End-to-end execution paths across module boundaries. |
@@ -474,7 +504,7 @@ Scout is honest about its own gaps in the same way it is honest about a reposito
 
 ### Roadmap, in the order that pays off
 
-1. **MCP server** — makes everything above reachable from the agent you already run.
+1. **Prove the value on a large real repository** — the MCP server and installer exist; whether they save tokens at equal accuracy is still unmeasured outside a 6-file synthetic corpus.
 2. **`Scout.Analysis.Git`** — unlocks skills *and* freshness from the same source.
 3. **Semantic embeddings** — built as an opt-in adapter (Ollama), keeping the lexical model as the offline default. Next: an embedded model that needs no service, and a calibrated similarity floor.
 4. **Concerns and flows** — once git history gives a signal strong enough to establish them from evidence.

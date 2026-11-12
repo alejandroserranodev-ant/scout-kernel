@@ -1,4 +1,5 @@
 using Scout.Cli.Commands;
+using Scout.Cli.Mcp;
 
 namespace Scout.Cli;
 
@@ -13,6 +14,9 @@ internal static class ScoutCommandLine
           scout query "<intent>" --kernel <path> [--limit <n>] [--kind contract|module|symbol|documentation|text|file] [--json] [--no-embeddings] [--profile]
           scout brief "<task>" --kernel <path> [--repository <path>] [--limit <n>] [--max-tokens <n>] [--json] [--format compact]
           scout read "<symbol>"|"<file>:<start>-<end>" --kernel <path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
+          scout neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"] [--json] [--format compact]
+          scout mcp
+          scout install claude --kernel <path> [--project|--user] [--hook-matcher <pattern>] [--dry-run] [--uninstall]
           scout --version
           scout --help
 
@@ -53,6 +57,26 @@ internal static class ScoutCommandLine
           ".scout" removed; pass it explicitly when the kernel was not compiled to that default location.
           Warns when the source file has changed since compile, since the recorded line numbers may no longer
           match. --max-lines caps how much a single call returns (default 400).
+
+        neighbors
+          Provisional: walks the reader/read names a card already records (a one-hop signal, not a typed,
+          directed edge), so --path and --explain are only ever as precise as that. A real graph is planned
+          for a later phase. --depth bounds how many hops any mode will follow (default 1).
+
+        mcp
+          Runs Scout as an MCP server over stdio: a minimal, hand-rolled JSON-RPC 2.0 loop exposing exactly
+          three tools (scout_brief, scout_read, scout_neighbors) — the same implementation the CLI commands
+          above use, so there is one tested behavior, not two. Register it with `claude mcp add scout -- scout
+          mcp` or a `.mcp.json` entry of the same shape; see `scout install claude`.
+
+        install claude
+          Wires a compiled kernel into Claude Code: a bounded CLAUDE.md section (at most 15 lines, between
+          `<!-- scout:begin -->`/`<!-- scout:end -->` markers), a PreToolUse hook that never blocks and prints
+          at most 3 lines, and copies of the kernel's generated skills. --project (default) targets the
+          current directory; --user targets the home directory's ~/.claude. Idempotent: running it again with
+          the same arguments changes nothing further. --dry-run reports what would change without writing.
+          --uninstall removes only what a prior install's manifest recorded. `scout update` resyncs the copied
+          skills afterward if an install manifest is present.
         """;
 
     internal static async Task<int> RunAsync(
@@ -100,6 +124,11 @@ internal static class ScoutCommandLine
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 ReadCommand.Verb => await ReadCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                NeighborsCommand.Verb => await NeighborsCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                "mcp" => await RunMcpAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                InstallCommand.Verb => await InstallCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 var unknown => await UnknownCommandAsync(unknown, error).ConfigureAwait(false)
             };
         }
@@ -117,6 +146,19 @@ internal static class ScoutCommandLine
             await error.WriteLineAsync($"error: {exception.Message}").ConfigureAwait(false);
             return ExitCodes.Failure;
         }
+    }
+
+    private static async Task<int> RunMcpAsync(
+        string[] arguments, TextWriter output, TextWriter error, CancellationToken cancellationToken)
+    {
+        if (arguments.Length > 0)
+        {
+            await error.WriteLineAsync($"error: 'mcp' takes no arguments (got '{arguments[0]}').").ConfigureAwait(false);
+            return ExitCodes.Usage;
+        }
+
+        await McpServer.RunAsync(Console.In, output, error, cancellationToken).ConfigureAwait(false);
+        return ExitCodes.Success;
     }
 
     private static async Task<int> UnknownCommandAsync(string command, TextWriter error)

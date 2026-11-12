@@ -3,6 +3,7 @@ using Scout.Analysis.CSharp;
 using Scout.Analysis.Css;
 using Scout.Analysis.Markdown;
 using Scout.Analysis.TypeScript;
+using Scout.Cli.Install;
 using Scout.Core.Compilation;
 using Scout.Core.Retrieval;
 using Scout.Retrieval.Sqlite;
@@ -148,7 +149,35 @@ internal static class UpdateCommand
                 .ConfigureAwait(false);
         }
 
+        await ResyncClaudeInstallAsync(result.Kernel.OutputPath, output).ConfigureAwait(false);
         return ExitCodes.Success;
+    }
+
+    // If `scout install claude` ran against this kernel before, its skills (generated fresh by every compile)
+    // would otherwise go stale the moment the kernel they were copied from is replaced.
+    private static async Task ResyncClaudeInstallAsync(string kernelPath, TextWriter output)
+    {
+        var fullKernelPath = Path.GetFullPath(kernelPath);
+        var repositoryRoot = Path.GetDirectoryName(fullKernelPath);
+        var candidateClaudeDirectories = new[]
+        {
+            repositoryRoot is null ? null : Path.Combine(repositoryRoot, ".claude"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude")
+        };
+
+        foreach (var claudeDirectory in candidateClaudeDirectories)
+        {
+            if (claudeDirectory is null || !Directory.Exists(claudeDirectory))
+            {
+                continue;
+            }
+
+            var resynced = ClaudeInstaller.ResyncSkills(claudeDirectory, fullKernelPath);
+            foreach (var path in resynced)
+            {
+                await output.WriteLineAsync($"Resynced installed skill: {path}").ConfigureAwait(false);
+            }
+        }
     }
 
     private static async Task<int> Usage(TextWriter error, string message)

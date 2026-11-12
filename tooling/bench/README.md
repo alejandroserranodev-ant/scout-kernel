@@ -16,6 +16,12 @@ Add `--report out.json` to also write the full per-task data. `--scout-command` 
 `SCOUT_COMMAND`, or a git-ignored local config's `scoutCommand` field) is required and never
 versioned, same convention as `tooling/eval/`.
 
+## MCP schema cost
+
+`node tooling/bench/schema-cost.mjs --scout-command "..." [--budget <tokens>]` asks `scout mcp` for its
+tool list and prints the approximate tokens the three schemas add to every session that registers
+the server (~528 on 2026-11-12; see `reports/mcp-schema-cost-2026-11-12.txt`).
+
 ## What each arm measures
 
 - **Arm A** — a deterministic simulation (`engine.mjs`, `simulateArmA`) of the cheapest naive

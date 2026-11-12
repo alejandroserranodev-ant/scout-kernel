@@ -205,6 +205,35 @@ public sealed partial class ScoutKernelGeneratorTests
         Assert.Contains("manifest.json", updated.ArtifactPaths);
     }
 
+    [Fact]
+    public async Task UpdateAsyncPreservesAgentSessionsAcrossTheSwap()
+    {
+        using var repositoryFiles = TemporaryRepository.CopyFixture(FixtureName, "update preserves sessions");
+        var inputs = CreateInputs(repositoryFiles.RootPath);
+        var outputPath = Path.Combine(repositoryFiles.WorkspacePath, "with-sessions.scout");
+
+        await ScoutKernelGenerator.GenerateAsync(
+            inputs.Repository,
+            inputs.Structural,
+            inputs.Intelligence,
+            outputPath,
+            ScoutVersion);
+
+        var sessionPath = Path.Combine(outputPath, ".internal", "agent-sessions", "session-1.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(sessionPath)!);
+        await File.WriteAllTextAsync(sessionPath, """{"id":"session-1"}""");
+
+        await ScoutKernelGenerator.UpdateAsync(
+            inputs.Repository,
+            inputs.Structural,
+            inputs.Intelligence,
+            outputPath,
+            ScoutVersion);
+
+        Assert.True(File.Exists(sessionPath), "update must not discard an in-flight agent session.");
+        Assert.Equal("""{"id":"session-1"}""", await File.ReadAllTextAsync(sessionPath));
+    }
+
     private static TestInputs CreateInputs(string repositoryRoot)
     {
         var structural = HandcraftedSnapshotFactory.CreateContractSnapshot();

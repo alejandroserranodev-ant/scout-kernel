@@ -1,0 +1,14 @@
+MCP tool schema cost (tooling/bench/schema-cost.mjs)
+
+Method: send `tools/list` to `scout mcp` over stdio, serialize each tool definition (name,
+description, inputSchema), divide characters by charsPerToken (4, tooling/bench/config.json).
+
+scout_brief          731 chars  ~183 tokens
+scout_read           642 chars  ~161 tokens
+scout_neighbors      736 chars  ~184 tokens
+TOTAL               2109 chars  ~528 tokens
+
+Reading: this is a fixed cost paid by every session that registers the server, whether or not a
+tool is called. It is an estimate (chars/4), not a tokenizer count. A task has to save more than
+this on average to come out ahead, which the synthetic corpus does not show (see
+synthetic-baseline-2026-11-09.txt); the real-repository measurement is still pending.

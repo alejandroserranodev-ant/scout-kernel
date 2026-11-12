@@ -4,6 +4,11 @@ namespace Scout.Core.Kernel;
 
 internal static class KernelFilePublisher
 {
+    // Runtime state a tool outside the compiler writes into an existing kernel after it was generated (an
+    // in-flight scout-agents session, say). None of it is a compiled artifact, so it is never in `artifacts`
+    // and a wholesale swap would otherwise discard it on every refresh.
+    private static readonly string[] PreservedRelativeDirectories = [".internal/agent-sessions"];
+
     internal static async Task PublishAsync(
         string outputPath,
         IReadOnlyList<KernelArtifact> artifacts,
@@ -40,6 +45,7 @@ internal static class KernelFilePublisher
             }
 
             EnsureExistingScoutKernel(fullOutputPath);
+            CarryOverPreservedDirectories(fullOutputPath, stagingPath);
             Directory.Move(fullOutputPath, backupPath);
             try
             {
@@ -79,6 +85,35 @@ internal static class KernelFilePublisher
         }
 
         return candidate;
+    }
+
+    // Copies state a tool left in the kernel being replaced into the newly staged one, before the swap, so a
+    // refresh never looks to that tool like its session history vanished.
+    private static void CarryOverPreservedDirectories(string existingKernelPath, string stagingPath)
+    {
+        foreach (var relativeDirectory in PreservedRelativeDirectories)
+        {
+            var source = ResolveBelow(existingKernelPath, relativeDirectory);
+            if (!Directory.Exists(source))
+            {
+                continue;
+            }
+
+            var destination = ResolveBelow(stagingPath, relativeDirectory);
+            CopyDirectoryRecursively(source, destination);
+        }
+    }
+
+    private static void CopyDirectoryRecursively(string sourcePath, string destinationPath)
+    {
+        Directory.CreateDirectory(destinationPath);
+        foreach (var filePath in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories))
+        {
+            var relative = Path.GetRelativePath(sourcePath, filePath);
+            var targetPath = Path.Combine(destinationPath, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            File.Copy(filePath, targetPath, overwrite: true);
+        }
     }
 
     private static void EnsureExistingScoutKernel(string outputPath)
