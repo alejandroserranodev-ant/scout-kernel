@@ -162,12 +162,12 @@ dotnet test                                                                     
 | 2 | Latency profile, `brief`, `read`, staleness guard, caps | Done (`b92fc29`), 110/110 tests green |
 | 3 | Install and MCP | Done (see section 6). MCP server, `neighbors`, `scout install claude`, skill resync, schema cost measured (~528 tokens) |
 | 4 | Mechanically checkable rules | Done in minimal form: `.scout/rules/*.json` (JSON, not YAML), closed schema, 4 check types, `scout rule`, `scout check [--staged]`, `brief` includes applicable active rules. Not done: wiring `check --staged` as a commit hook (Phase 9) |
-| 5 | Graph (`edges` table) and `KERNEL_REPORT.md` | Implemented on branch `phase5-graph` (not yet merged to `master`): `edges` table (index schema v2, older kernels get a clear "recompile" message), `neighbors` rewritten over typed directed edges, `KERNEL_REPORT.md` (max 100 lines, linked from `KERNEL.md`). Full-suite check and merge pending |
+| 5 | Graph (`edges` table) and `KERNEL_REPORT.md` | Done and merged (183/183 tests): `edges` table (index schema v2, older kernels get a clear "recompile" message), `neighbors` rewritten over typed directed edges, `KERNEL_REPORT.md` (max 100 lines, linked from `KERNEL.md`) |
 | 6 | Incremental update, git hook, real freshness | Not started |
 | 7 | Recall (glossary, tuning/validation split) | Not started |
 | 8 | Light coverage (SQL, config, Markdown bodies, PDF, wiki exports) | SQL done (`Scout.Analysis.Sql`, `scout db check` static + optional live via `psql`); the rest not started |
 | 9 | Commit gate (`scout status --staged`, PreToolUse on `git commit`) | Not started. Now the main lever for the "fewer PR comments" goal; see Phase 12 and section 7, item I |
-| 11 | Impact analysis: `scout impact "<symbol>"` (what depends on a declaration, transitively) | Implemented on branch `phase5-graph`: walks incoming dependency edges (calls, references, renders, inherits, implements; not contains), `--depth`, `--limit`, `--json`; reachable through the existing `scout_neighbors` MCP tool via `impact: true`, so the server stays at 3 tools. Works on a real 200-file app. Merge pending |
+| 11 | Impact analysis: `scout impact "<symbol>"` (what depends on a declaration, transitively) | Done and merged: walks incoming dependency edges (calls, references, renders, inherits, implements; not contains), `--depth`, `--limit`, `--json`; reachable through the existing `scout_neighbors` MCP tool via `impact: true`, so the server stays at 3 tools. Works on a real 200-file app |
 | 12 | Make Scout get used without the agent deciding to: UserPromptSubmit hook that injects a 3-line brief (top edit sites, applicable rules), and the commit gate | Not started. Motivation: in the quality A/B pilot all three Scout-arm agents barely used it |
 | 13 | Retrieval ranking: BM25-style scoring instead of cosine over word parts, with a tuning/validation split of the real-history tasks | Not started. Recall is the weakest measured number; do not tune on fewer than two repositories |
 | 14 | Value re-validation (gate): repeat the with/without-Scout comparison on a large repository that has no agent guide (no AGENTS.md-style document), more tasks, two reviewers per task | Not started. Run before building more; if Scout does not win there either, stop and report |
@@ -233,8 +233,7 @@ E. **Phase 7.** Per-project glossary in `.scout/scout.config.json`, tested on th
 F. **Phase 8.** Analyzers for SQL (including row-level-security policies), JSON/YAML config,
    Markdown bodies and links, text-layer PDF (scanned = unknown area, no OCR), local wiki exports;
    `documented-by` edges and broken-citation reports.
-I. **Phases 11-14 (added after the quality A/B pilot).** Order: merge Phases 5 and 11 (branch
-   `phase5-graph`), then 12, then 9, then 13, then run 14 as the gate. Phase 12: a hook command
+I. **Phases 11-14 (added after the quality A/B pilot).** Order: Phases 5 and 11 are merged; next 12, then 9, then 13, then run 14 as the gate. Phase 12: a hook command
    (`scout hook prompt`) that reads the prompt from stdin, runs `brief` with a small budget, and prints at most 3
    lines (rule 7): top edit sites as `path:line name`, the ids of the rules that apply, and a pointer to
    `scout impact`; silent for short prompts; never blocks and never fails loudly; registered by

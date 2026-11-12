@@ -275,8 +275,18 @@ a kernel never stores source bodies. `--repository` defaults to the kernel path 
 removed; pass it explicitly otherwise. Warns when the source file changed since compile, since the recorded
 line numbers may no longer match.
 
-`neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"]` is provisional: it
-walks the reader/read names a card already records. It cannot tell edge kind or direction.
+`neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"]` walks the typed,
+directed edges the kernel recorded between declarations (`calls`, `references`, `renders`, `inherits`, `implements`,
+`contains`): every hop says how two names connect and in which direction.
+
+`impact "<symbol>" --kernel <path> [--depth <n>] [--limit <n>] [--json]` answers "what breaks if I change this": the
+declarations that depend on it, directly and transitively, grouped by hop, with the files they sit in. It follows
+dependency edges backwards (not `contains`). It is as complete as the analyzers' relationships: reflection, dynamic
+calls, and cross-language links they cannot observe are not counted, and an empty answer says so. Over MCP it is
+`scout_neighbors` with `impact: true`, so the server keeps its three tools.
+
+Every kernel also carries `KERNEL_REPORT.md` (at most 100 lines): size, files by language, largest modules, the most
+depended-on declarations, unknown areas, and freshness. Open it on demand.
 
 ### Rules a machine can check
 
