@@ -140,7 +140,7 @@ dotnet test                                                                     
 | 5 | Graph (`edges` table) and `KERNEL_REPORT.md` | Not started |
 | 6 | Incremental update, git hook, real freshness | Not started |
 | 7 | Recall (glossary, tuning/validation split) | Not started |
-| 8 | Light coverage (SQL, config, Markdown bodies, PDF, wiki exports) | Not started |
+| 8 | Light coverage (SQL, config, Markdown bodies, PDF, wiki exports) | SQL done (`Scout.Analysis.Sql`, `scout db check` static + optional live via `psql`); the rest not started |
 | 9 | Commit gate (`scout status --staged`, PreToolUse on `git commit`) | Not started |
 | 10 | Docs, secret/leak sweep, CI, release | Partly done early: repo created and public, LICENSE added. CI, README rewrite, CHANGELOG, final sweep remain |
 

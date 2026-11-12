@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Scout.Analysis.TypeScript\Scout.Analysis.TypeScript.csproj" />
     <ProjectReference Include="..\Scout.Analysis.Css\Scout.Analysis.Css.csproj" />
     <ProjectReference Include="..\Scout.Analysis.Markdown\Scout.Analysis.Markdown.csproj" />
+    <ProjectReference Include="..\Scout.Analysis.Sql\Scout.Analysis.Sql.csproj" />
     <ProjectReference Include="..\Scout.Retrieval.Sqlite\Scout.Retrieval.Sqlite.csproj" />
     <ProjectReference Include="..\Scout.Embeddings.Ollama\Scout.Embeddings.Ollama.csproj" />
   </ItemGroup>

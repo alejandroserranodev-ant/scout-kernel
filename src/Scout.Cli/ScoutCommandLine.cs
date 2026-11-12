@@ -16,6 +16,7 @@ internal static class ScoutCommandLine
           scout read "<symbol>"|"<file>:<start>-<end>" --kernel <path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
           scout neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"] [--json] [--format compact]
           scout mcp
+          scout db check <repository> [--connection-env <VAR>] [--psql <command>] [--limit <n>] [--json]
           scout install claude --kernel <path> [--project|--user] [--hook-matcher <pattern>] [--dry-run] [--uninstall]
           scout --version
           scout --help
@@ -68,6 +69,13 @@ internal static class ScoutCommandLine
           three tools (scout_brief, scout_read, scout_neighbors) — the same implementation the CLI commands
           above use, so there is one tested behavior, not two. Register it with `claude mcp add scout -- scout
           mcp` or a `.mcp.json` entry of the same shape; see `scout install claude`.
+
+        db check
+          Reviews the SQL files' schema declarations (tables, columns, row level security, policies) and, whenever
+          a connection is available, compares them with the live database. The connection string is read from an
+          environment variable (default SCOUT_DB_URL; change it with --connection-env), passed to the `psql` client,
+          and never printed or stored; the session is read-only and reads catalog views, not rows. Without a
+          connection (or without psql) it reports the static findings and says why the live check was skipped.
 
         install claude
           Wires a compiled kernel into Claude Code: a bounded CLAUDE.md section (at most 15 lines, between
@@ -127,6 +135,8 @@ internal static class ScoutCommandLine
                 NeighborsCommand.Verb => await NeighborsCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 "mcp" => await RunMcpAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                DbCommand.Verb => await DbCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 InstallCommand.Verb => await InstallCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 var unknown => await UnknownCommandAsync(unknown, error).ConfigureAwait(false)

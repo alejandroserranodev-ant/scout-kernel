@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Scout.Cli\Scout.Cli.csproj" />
     <ProjectReference Include="..\..\src\Scout.Analysis.Css\Scout.Analysis.Css.csproj" />
     <ProjectReference Include="..\..\src\Scout.Analysis.Markdown\Scout.Analysis.Markdown.csproj" />
+    <ProjectReference Include="..\..\src\Scout.Analysis.Sql\Scout.Analysis.Sql.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Fixtures\**\*" Link="Fixtures\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

@@ -184,6 +184,7 @@ The rule that holds the whole thing together:
 | TypeScript, JavaScript, React | `Scout.Analysis.TypeScript` | `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` | A Node sidecar driving the TypeScript compiler API |
 | CSS | `Scout.Analysis.Css` | `.css` | A scanner that reports declared names only |
 | Markdown | `Scout.Analysis.Markdown` | `.md`, `.markdown` | A scanner that reports the heading outline only |
+| SQL | `Scout.Analysis.Sql` | `.sql` | A statement-level reader: tables, columns, row level security, policies, functions, views, indexes. Not a SQL parser; bodies and data changes are ignored |
 
 The TypeScript analyzer runs **out of process on purpose**. Reimplementing module resolution and type checking in C# would produce plausible but unverified relationships, which is worse than reporting nothing. The sidecar resolves `typescript` from the analyzed repository first and falls back to its own vendored copy, so Scout works on repositories with no installed dependencies.
 
@@ -275,6 +276,22 @@ line numbers may no longer match.
 
 `neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"]` is provisional: it
 walks the reader/read names a card already records. It cannot tell edge kind or direction.
+
+### Review the database schema
+
+```text
+scout db check <repository> [--connection-env <VAR>] [--psql <command>] [--limit <n>] [--json]
+```
+
+Always reports static findings from the repository's `.sql` files (for example a table that never enables row
+level security). When a connection string is available in an environment variable (default `SCOUT_DB_URL`) and
+the PostgreSQL `psql` client is on the path, it also compares the files with the live database: missing or
+undeclared tables, columns and policies, and row level security that is off in the database. The connection is
+never printed or stored, the session is read-only, and only catalog views are read, never rows. With no
+connection, or no `psql`, it says why the live half was skipped and still returns the static findings.
+Limits: the SQL files are read in path order and `DROP`/`ALTER ... DROP COLUMN` are not tracked, so a column
+dropped by a later migration can show up as `COLUMN_MISSING_IN_DATABASE`. Only schemas the files declare tables
+in are compared, so a platform's own schemas never drown real findings.
 
 ### Use Scout from Claude Code
 

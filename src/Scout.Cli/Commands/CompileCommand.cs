@@ -2,6 +2,7 @@ using System.Globalization;
 using Scout.Analysis.CSharp;
 using Scout.Analysis.Css;
 using Scout.Analysis.Markdown;
+using Scout.Analysis.Sql;
 using Scout.Analysis.TypeScript;
 using Scout.Core.Compilation;
 using Scout.Core.Retrieval;
@@ -101,7 +102,8 @@ internal static class CompileCommand
                 new CSharpLanguageAnalyzer(),
                 new TypeScriptLanguageAnalyzer(),
                 new CssLanguageAnalyzer(),
-                new MarkdownLanguageAnalyzer()
+                new MarkdownLanguageAnalyzer(),
+                new SqlLanguageAnalyzer()
             ],
             indexWriter: withoutIndex ? null : new SqliteRetrievalIndexWriter(),
             denseModel: denseModel);

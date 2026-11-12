@@ -3,6 +3,7 @@
     <Project Path="src/Scout.Analysis.CSharp/Scout.Analysis.CSharp.csproj" />
     <Project Path="src/Scout.Analysis.Css/Scout.Analysis.Css.csproj" />
     <Project Path="src/Scout.Analysis.Markdown/Scout.Analysis.Markdown.csproj" />
+    <Project Path="src/Scout.Analysis.Sql/Scout.Analysis.Sql.csproj" />
     <Project Path="src/Scout.Analysis.TypeScript/Scout.Analysis.TypeScript.csproj" />
     <Project Path="src/Scout.Cli/Scout.Cli.csproj" />
     <Project Path="src/Scout.Core/Scout.Core.csproj" />

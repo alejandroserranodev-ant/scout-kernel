@@ -2,6 +2,7 @@ using System.Globalization;
 using Scout.Analysis.CSharp;
 using Scout.Analysis.Css;
 using Scout.Analysis.Markdown;
+using Scout.Analysis.Sql;
 using Scout.Analysis.TypeScript;
 using Scout.Cli.Install;
 using Scout.Core.Compilation;
@@ -97,7 +98,8 @@ internal static class UpdateCommand
                 new CSharpLanguageAnalyzer(),
                 new TypeScriptLanguageAnalyzer(),
                 new CssLanguageAnalyzer(),
-                new MarkdownLanguageAnalyzer()
+                new MarkdownLanguageAnalyzer(),
+                new SqlLanguageAnalyzer()
             ],
             indexWriter: withoutIndex ? null : new SqliteRetrievalIndexWriter(),
             denseModel: denseModel);
