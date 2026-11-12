@@ -178,7 +178,7 @@ internal static class QueryCommand
                     // exist only to let `scout read`/`scout brief` resolve a card to source (a line range, a
                     // staleness hash) are never shown here: they answer "where exactly," not "what is this."
                     Facets = hit.Card.Facets
-                        .Where(facet => !KnownFacetNames.InternalOnly.Contains(facet.Name))
+                        .Where(facet => !KnownFacetNames.HiddenFromOutput.Contains(facet.Name))
                         .GroupBy(facet => facet.Name, StringComparer.Ordinal)
                         .ToDictionary(
                             group => group.Key,

@@ -62,10 +62,12 @@ public static class RetrievalCardCompiler
     /// </summary>
     /// <param name="structural">The structural source of truth.</param>
     /// <param name="intelligence">The intelligence derived from it.</param>
+    /// <param name="bodyTermsByPath">Distinguishing words per source file, searched but never shown; see <see cref="FileVocabulary"/>.</param>
     /// <returns>The cards, ordered deterministically by kind and identifier.</returns>
     public static IReadOnlyList<RetrievalCard> Compile(
         StructuralSnapshot structural,
-        IntelligenceSnapshot intelligence)
+        IntelligenceSnapshot intelligence,
+        IReadOnlyDictionary<string, string[]>? bodyTermsByPath = null)
     {
         ArgumentNullException.ThrowIfNull(structural);
         ArgumentNullException.ThrowIfNull(intelligence);
@@ -109,7 +111,7 @@ public static class RetrievalCardCompiler
                     fileHashesByPath)
             }));
 
-        cards.AddRange(CreateFileCards(structural, readsBySymbol, fileHashesByPath));
+        cards.AddRange(CreateFileCards(structural, readsBySymbol, fileHashesByPath, bodyTermsByPath));
 
         return cards
             .OrderBy(card => card.Kind, StringComparer.Ordinal)
@@ -266,7 +268,8 @@ public static class RetrievalCardCompiler
     private static IEnumerable<RetrievalCard> CreateFileCards(
         StructuralSnapshot structural,
         IReadOnlyDictionary<StructuralId, string[]> readsBySymbol,
-        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath)
+        IReadOnlyDictionary<string, (string Hash, string Algorithm)> fileHashesByPath,
+        IReadOnlyDictionary<string, string[]>? bodyTermsByPath)
     {
         var symbolsByFile = structural.Symbols
             .Where(symbol => symbol.DeclarationLocations.Count > 0)
@@ -305,6 +308,10 @@ public static class RetrievalCardCompiler
                 new("texts", texts.Length.ToString(CultureInfo.InvariantCulture))
             };
             AddStalenessFacets(fileFacets, file.Key, fileHashesByPath);
+            if (bodyTermsByPath is not null && bodyTermsByPath.TryGetValue(file.Key, out var bodyTerms) && bodyTerms.Length > 0)
+            {
+                fileFacets.Add(new(KnownFacetNames.BodyTerms, string.Join(' ', bodyTerms)));
+            }
 
             var separator = file.Key.LastIndexOf('/');
             yield return new RetrievalCard(

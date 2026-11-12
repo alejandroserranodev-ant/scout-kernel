@@ -12,6 +12,13 @@ public static class RetrievalRanking
 {
     private const double ImportanceInfluence = 0.25;
 
+    /// <summary>
+    /// How much more a card whose name is exactly the query is worth. Cosine similarity over shared word parts can
+    /// leave a card named "ModelHero" a hair behind one named "Model" for the query "ModelHero"; asking for a name
+    /// is the clearest request there is, so the card with that name is never outranked by a near neighbour.
+    /// </summary>
+    public const double ExactNameMultiplier = 2d;
+
     // Rank fusion rewards a card for ranking well in either channel and rewards it most for ranking well in both.
     // The offset sets how fast a rank loses value: small enough that the top of a list matters, large enough that
     // the prior (at most a quarter of the score) moves a card a few places and not from the tenth to the first.
@@ -39,11 +46,13 @@ public static class RetrievalRanking
     /// <param name="candidates">The candidate cards paired with their document vectors.</param>
     /// <param name="query">The embedded query.</param>
     /// <param name="limit">The maximum number of hits to return.</param>
+    /// <param name="exactName">The query text, so a card with exactly that name is ranked first.</param>
     /// <returns>The ranked hits, which is empty when nothing in the query is recognized.</returns>
     public static IReadOnlyList<RetrievalHit> Rank(
         IEnumerable<(RetrievalCard Card, EmbeddingVector Vector)> candidates,
         EmbeddingVector query,
-        int limit)
+        int limit,
+        string? exactName = null)
     {
         ArgumentNullException.ThrowIfNull(candidates);
         ArgumentNullException.ThrowIfNull(query);
@@ -52,7 +61,8 @@ public static class RetrievalRanking
             ? []
             : Rank(
                 candidates.Select(candidate => (candidate.Card, query.SimilarityTo(candidate.Vector))),
-                limit);
+                limit,
+                exactName);
     }
 
     /// <summary>
@@ -103,15 +113,22 @@ public static class RetrievalRanking
             .ToArray();
     }
 
+    private static double ExactNameFactor(RetrievalCard card, string? exactName) =>
+        !string.IsNullOrWhiteSpace(exactName) && string.Equals(card.Name, exactName.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? ExactNameMultiplier
+            : 1d;
+
     /// <summary>
     /// Orders candidates whose similarity was already computed, such as by an inverted index in storage.
     /// </summary>
     /// <param name="candidates">The candidate cards paired with their similarity to the query.</param>
     /// <param name="limit">The maximum number of hits to return.</param>
+    /// <param name="exactName">The query text, so a card with exactly that name is ranked first.</param>
     /// <returns>The hits, highest score first, with ties broken deterministically by identifier.</returns>
     public static IReadOnlyList<RetrievalHit> Rank(
         IEnumerable<(RetrievalCard Card, double Similarity)> candidates,
-        int limit)
+        int limit,
+        string? exactName = null)
     {
         ArgumentNullException.ThrowIfNull(candidates);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
@@ -120,7 +137,7 @@ public static class RetrievalRanking
             .Where(candidate => candidate.Similarity >= MinimumSimilarity)
             .Select(candidate => new RetrievalHit(
                 candidate.Card,
-                Score(candidate.Similarity, candidate.Card.Importance),
+                Score(candidate.Similarity, candidate.Card.Importance) * ExactNameFactor(candidate.Card, exactName),
                 candidate.Similarity))
             .OrderByDescending(hit => hit.Score)
             .ThenBy(hit => hit.Card.Id, StringComparer.Ordinal)

@@ -36,6 +36,14 @@ misses a file whose symbols are named differently, which grep finds. Fixed on th
 configurable; bench reports per-file recall and a ranked-grep baseline. The manual Claude Code protocol (section 7,
 step A) has still NOT been run; it is the real verdict.
 
+**Body-term vocabulary (2026-11-12):** file cards now carry a search-only `bodyTerms` facet (top 40 tf-idf words from
+the file text, comments included; `FileVocabulary`, hidden from `query` output via `KnownFacetNames.HiddenFromOutput`).
+Effect on the same tasks: default mixed query recall 34.7% -> 37.3% (hit 20% -> 24%) on one app, unchanged (49.2%) on the
+other; `--kind file` 50.8% -> 58.8% and 34.0% -> 33.3%. Small and inconsistent, so it was not tuned further (two repos
+would just be overfitted; Phase 7 requires a tuning/validation split). Part of the remaining gap is the proxy itself:
+commits touch files (config, entry points) their subject never names, which caps grep too. The decision still needs the
+manual protocol.
+
 ## 2. Hard rules (carry these into every change)
 
 1. Nothing hardcoded: paths, thresholds, limits, word lists, hook matchers, messages, token

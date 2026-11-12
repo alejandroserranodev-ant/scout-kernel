@@ -211,7 +211,7 @@ public sealed class SqliteRetrievalDatabase : IDisposable
         CreateQueryTerms(vector);
         var candidates = ReadCandidates(kind);
         transaction.Rollback();
-        return RetrievalRanking.Rank(candidates, limit);
+        return RetrievalRanking.Rank(candidates, limit, query);
     }
 
     /// <summary>

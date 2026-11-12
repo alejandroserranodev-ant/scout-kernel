@@ -104,7 +104,22 @@ public static class ScoutKernelGenerator
         IDenseEmbeddingModel? denseModel,
         CancellationToken cancellationToken)
     {
-        var cards = RetrievalCardCompiler.Compile(structural, intelligence);
+        var contents = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var file in structural.SourceFiles)
+        {
+            try
+            {
+                contents[file.RelativePath] = await File
+                    .ReadAllTextAsync(Scout.Core.Repository.RepositoryPath.Resolve(repository.RootPath, file.RelativePath), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (IOException)
+            {
+                // A file that vanished or is locked simply contributes no vocabulary; its declarations still index.
+            }
+        }
+
+        var cards = RetrievalCardCompiler.Compile(structural, intelligence, FileVocabulary.Build(contents));
         var index = RetrievalIndex.Build(cards, new LexicalEmbeddingModel());
         if (denseModel is not null)
         {

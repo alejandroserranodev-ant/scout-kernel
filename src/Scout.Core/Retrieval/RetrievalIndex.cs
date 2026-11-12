@@ -134,6 +134,6 @@ public sealed class RetrievalIndex
         var candidates = cards
             .Select((card, index) => (Card: card, Vector: vectors[index]))
             .Where(candidate => kind is null || string.Equals(candidate.Card.Kind, kind, StringComparison.Ordinal));
-        return RetrievalRanking.Rank(candidates, vector, limit);
+        return RetrievalRanking.Rank(candidates, vector, limit, query);
     }
 }

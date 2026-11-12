@@ -18,6 +18,12 @@ public static class KnownFacetNames
     public const string HashAlgorithm = "hashAlgorithm";
 
     /// <summary>
+    /// The distinguishing words a file uses (see <see cref="FileVocabulary"/>). Searched, but never returned: it
+    /// exists so a query finds the file, and listing it would only spend an agent's tokens.
+    /// </summary>
+    public const string BodyTerms = "bodyTerms";
+
+    /// <summary>
     /// Facet names that exist only so a resolver (<c>scout read</c>, <c>scout brief</c>) can turn a card into an
     /// exact source location and a staleness check, without reading the much larger structural IR. A hash or a
     /// line number is never what a question is phrased in, so these are excluded from a card's indexed search
@@ -28,5 +34,14 @@ public static class KnownFacetNames
         EndLine,
         ContentHash,
         HashAlgorithm
+    };
+
+    /// <summary>Facets that are never shown to a caller: <see cref="InternalOnly"/> plus <see cref="BodyTerms"/>.</summary>
+    public static readonly IReadOnlySet<string> HiddenFromOutput = new HashSet<string>(StringComparer.Ordinal)
+    {
+        EndLine,
+        ContentHash,
+        HashAlgorithm,
+        BodyTerms
     };
 }
