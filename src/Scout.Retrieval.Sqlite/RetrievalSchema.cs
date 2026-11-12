@@ -12,7 +12,7 @@ namespace Scout.Retrieval.Sqlite;
 internal static class RetrievalSchema
 {
     /// <summary>The schema version recorded in the database, so an incompatible index is rejected, not misread.</summary>
-    internal const string Version = "1";
+    internal const string Version = "2";
 
     internal const string Create = """
         PRAGMA journal_mode = OFF;
@@ -50,6 +50,15 @@ internal static class RetrievalSchema
             weight     REAL NOT NULL,
             PRIMARY KEY (dimension, card_rowid)
         ) WITHOUT ROWID;
+
+        CREATE TABLE edges (
+            source_id TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            kind      TEXT NOT NULL,
+            PRIMARY KEY (source_id, target_id, kind)
+        ) WITHOUT ROWID;
+
+        CREATE INDEX ix_edges_target ON edges (target_id);
         """;
 
     // Present only when the index carries dense vectors. An index without them has no such table, so a reader

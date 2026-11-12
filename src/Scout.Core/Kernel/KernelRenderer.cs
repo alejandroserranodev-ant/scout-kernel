@@ -53,6 +53,7 @@ internal static class KernelRenderer
         {
             KernelArtifact.Text("AGENTS.md", RenderAgents(intelligence, retrieval)),
             KernelArtifact.Text("KERNEL.md", RenderKernel(repository, structural, intelligence, retrieval)),
+            KernelArtifact.Text(KernelReport.RelativePath, KernelReport.Render(repository, structural, intelligence)),
             KernelArtifact.Text("architecture/overview.md", RenderArchitecture(structural, intelligence, moduleDetails)),
             KernelArtifact.Text("agents/index.json", RenderAgentIndex(agents, agentDetails)),
             KernelArtifact.Text("conventions/index.json", RenderConventionIndex(intelligence, conventionDetails)),
@@ -208,6 +209,7 @@ internal static class KernelRenderer
             {entry}
 
             - architecture: `architecture/overview.md`
+            - report: `KERNEL_REPORT.md` (counts, most depended-on declarations, unknown areas; open on demand)
             - agent roles: `agents/index.json`
             - orchestration skill: `{OrchestrationSkillArtifacts.RelativeDirectory}/SKILL.md` (Architect/Developer/Reviewer/QA pipeline)
             - query skill: `{RetrievalQuerySkillArtifacts.RelativeDirectory}/SKILL.md` (fast direct lookups)

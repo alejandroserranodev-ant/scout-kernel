@@ -16,6 +16,7 @@ internal static class ScoutCommandLine
           scout read "<symbol>"|"<file>:<start>-<end>" --kernel <path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
           scout neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"] [--json] [--format compact]
           scout mcp
+          scout impact "<symbol>" --kernel <path> [--depth <n>] [--limit <n>] [--json] [--format compact]
           scout check [--repository <path>] [--staged] [--limit <n>] [--json]
           scout rule list|show|propose|approve|retire ...
           scout db check <repository> [--connection-env <VAR>] [--psql <command>] [--limit <n>] [--json]
@@ -71,6 +72,12 @@ internal static class ScoutCommandLine
           three tools (scout_brief, scout_read, scout_neighbors) — the same implementation the CLI commands
           above use, so there is one tested behavior, not two. Register it with `claude mcp add scout -- scout
           mcp` or a `.mcp.json` entry of the same shape; see `scout install claude`.
+
+        impact
+          What depends on a declaration, directly and transitively (the blast radius of changing it), found by walking
+          the recorded calls/references/renders/inherits/implements edges backwards. Lists dependents by hop and the
+          files they sit in. As complete as the analyzers' relationships: dependencies they cannot observe (reflection,
+          dynamic calls) are not counted, and the output says so when nothing is found. --depth defaults to 3.
 
         check
           Runs the repository's active rules (.scout/rules/*.json) over its files, or only the staged ones with
@@ -148,6 +155,8 @@ internal static class ScoutCommandLine
                 NeighborsCommand.Verb => await NeighborsCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 "mcp" => await RunMcpAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                ImpactCommand.Verb => await ImpactCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 RuleCommand.Verb => await RuleCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 CheckCommand.Verb => await CheckCommand

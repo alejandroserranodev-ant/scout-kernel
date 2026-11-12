@@ -95,6 +95,7 @@ public sealed class SqliteRetrievalDatabase : IDisposable
         WriteMetadata(connection, index, sourceFingerprint);
         WriteVocabulary(connection, index);
         WriteCards(connection, index);
+        WriteEdges(connection, index);
         DenseStorage.Write(connection, index);
         transaction.Commit();
     }
@@ -161,7 +162,8 @@ public sealed class SqliteRetrievalDatabase : IDisposable
             if (!string.Equals(schemaVersion, RetrievalSchema.Version, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(
-                    $"Retrieval index schema '{schemaVersion ?? "unknown"}' cannot be read by this version, which expects '{RetrievalSchema.Version}'.");
+                    $"Retrieval index schema '{schemaVersion ?? "unknown"}' cannot be read by this version, which expects " +
+                    $"'{RetrievalSchema.Version}'. The kernel was built by a different Scout version: recompile it with `scout compile` (or `scout update`).");
             }
 
             var modelId = metadata.GetValueOrDefault(RetrievalSchema.MetadataModelId) ?? "unknown";
@@ -372,6 +374,62 @@ public sealed class SqliteRetrievalDatabase : IDisposable
             idf.Value = entry.InverseDocumentFrequency;
             command.ExecuteNonQuery();
         }
+    }
+
+    private static void WriteEdges(SqliteConnection connection, RetrievalIndex index)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO edges (source_id, target_id, kind) VALUES ($source, $target, $kind);";
+        var source = command.Parameters.Add("$source", SqliteType.Text);
+        var target = command.Parameters.Add("$target", SqliteType.Text);
+        var kind = command.Parameters.Add("$kind", SqliteType.Text);
+        foreach (var edge in index.Edges)
+        {
+            source.Value = edge.SourceId;
+            target.Value = edge.TargetId;
+            kind.Value = edge.Kind;
+            command.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>Finds a card by its id.</summary>
+    /// <param name="cardId">The card id.</param>
+    /// <returns>The card, or <see langword="null"/> when no card has that id.</returns>
+    public RetrievalCard? FindById(string cardId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cardId);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, kind, name, relative_path, summary, importance, detail, facets, related
+            FROM cards WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", cardId);
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? ReadCard(reader) : null;
+    }
+
+    /// <summary>Reads the edges that leave (<paramref name="outgoing"/>) or arrive at a card, in a stable order.</summary>
+    /// <param name="cardId">The card id.</param>
+    /// <param name="outgoing"><see langword="true"/> for edges the card starts, <see langword="false"/> for edges that point to it.</param>
+    /// <returns>The edges.</returns>
+    public IReadOnlyList<RetrievalEdge> ReadEdges(string cardId, bool outgoing)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cardId);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = outgoing
+            ? "SELECT source_id, target_id, kind FROM edges WHERE source_id = $id ORDER BY kind, target_id;"
+            : "SELECT source_id, target_id, kind FROM edges WHERE target_id = $id ORDER BY kind, source_id;";
+        command.Parameters.AddWithValue("$id", cardId);
+        var edges = new List<RetrievalEdge>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            edges.Add(new RetrievalEdge(reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+        }
+
+        return edges;
     }
 
     private static void WriteCards(SqliteConnection connection, RetrievalIndex index)

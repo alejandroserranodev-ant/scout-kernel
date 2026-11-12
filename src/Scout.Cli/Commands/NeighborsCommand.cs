@@ -7,16 +7,14 @@ using Scout.Retrieval.Sqlite;
 namespace Scout.Cli.Commands;
 
 /// <summary>
-/// Walks the names a card already records as connected to it (readers and reads, folded into
-/// <see cref="RetrievalCard.Related"/> at compile time) to answer "what is near this symbol", "is there a path
-/// to that one", and "why are these two connected".
+/// Walks the typed, directed edges a kernel recorded between declarations (calls, references, renders, inherits,
+/// implements, contains) to answer "what is near this symbol", "is there a path to that one", and "why are these
+/// two connected".
 /// </summary>
 /// <remarks>
-/// This is a provisional implementation. It can only see what a card's own <c>Related</c> names capture — a
-/// one-hop reader/read relationship, not a typed, directed edge — so a path longer than one hop, or an
-/// "explain" answer, is only ever as precise as that. A real graph (<c>edges</c> table, typed and directed) is
-/// planned for a later phase; this trades precision for being usable today, without reading the much larger
-/// structural IR per call.
+/// Every hop is a relationship an analyzer observed, with its kind and its direction, so an answer says
+/// <em>how</em> two names connect and not merely that they do. Paths are searched ignoring direction (a caller
+/// and a callee are both "connected"), and each step reports the direction it was actually recorded in.
 /// </remarks>
 internal static class NeighborsCommand
 {
@@ -25,6 +23,8 @@ internal static class NeighborsCommand
     private const string IndexRelativePath = "retrieval/index.db";
     private const int DefaultDepth = 1;
     private const int MaxVisitedNodes = 200;
+    private const string Outgoing = "out";
+    private const string Incoming = "in";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
@@ -137,35 +137,51 @@ internal static class NeighborsCommand
         }
 
         using var database = SqliteRetrievalDatabase.Open(indexPath, new LexicalEmbeddingModel());
-        if (!TryResolveOne(database, symbol, out var sourceCard, out var ambiguityOrMissing))
+        if (!TryResolveOne(database, symbol, out var sourceCard, out var message))
         {
-            await error.WriteLineAsync(ambiguityOrMissing).ConfigureAwait(false);
+            await error.WriteLineAsync(message).ConfigureAwait(false);
             return ExitCodes.Failure;
         }
 
+        var target = explainTarget ?? pathTarget;
+        if (target is null)
+        {
+            var layers = Expand(database, sourceCard!, depth);
+            await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(layers, JsonOptions) : RenderLayers(sourceCard!, layers, compact))
+                .ConfigureAwait(false);
+            return ExitCodes.Success;
+        }
+
+        if (!TryResolveOne(database, target, out var targetCard, out message))
+        {
+            // A target that names nothing is an answer to "are they connected", not a usage error.
+            if (explainTarget is not null)
+            {
+                var missing = new ExplainResult(sourceCard!.Name, target, Connected: false, Hops: null, [], message.Replace("error: ", string.Empty, StringComparison.Ordinal));
+                await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(missing, JsonOptions) : RenderExplain(missing)).ConfigureAwait(false);
+                return ExitCodes.Success;
+            }
+
+            await error.WriteLineAsync(message).ConfigureAwait(false);
+            return ExitCodes.Failure;
+        }
+
+        var steps = FindPath(database, sourceCard!, targetCard!, depth);
         if (explainTarget is not null)
         {
-            var explanation = Explain(database, sourceCard!, explainTarget, depth);
+            var explanation = Explain(sourceCard!, targetCard!, steps, depth);
             await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(explanation, JsonOptions) : RenderExplain(explanation))
                 .ConfigureAwait(false);
             return ExitCodes.Success;
         }
 
-        if (pathTarget is not null)
-        {
-            var path = FindPath(database, sourceCard!, pathTarget, depth);
-            await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(path, JsonOptions) : RenderPath(path))
-                .ConfigureAwait(false);
-            return ExitCodes.Success;
-        }
-
-        var layers = Expand(database, sourceCard!, depth);
-        await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(layers, JsonOptions) : RenderLayers(sourceCard!, layers, compact))
+        var path = new PathResult(steps is not null, steps ?? [], depth);
+        await output.WriteLineAsync(asJson ? JsonSerializer.Serialize(path, JsonOptions) : RenderPath(sourceCard!, path))
             .ConfigureAwait(false);
         return ExitCodes.Success;
     }
 
-    private static bool TryResolveOne(SqliteRetrievalDatabase database, string name, out RetrievalCard? card, out string message)
+    internal static bool TryResolveOne(SqliteRetrievalDatabase database, string name, out RetrievalCard? card, out string message)
     {
         var matches = database.FindByExactName(KnownCardKinds.Symbol, name);
         if (matches.Count == 0)
@@ -192,11 +208,33 @@ internal static class NeighborsCommand
         return true;
     }
 
-    // One-hop neighbours are exactly a card's own Related names, resolved back to cards where possible, so a
-    // caller sees what they are (kind, path) and not just a bare name that might not even resolve.
+    // Every card one edge away, with the edge's kind and the direction it was recorded in, in a stable order.
+    private static List<Hop> Adjacent(SqliteRetrievalDatabase database, RetrievalCard card)
+    {
+        var hops = new List<Hop>();
+        foreach (var outgoing in new[] { true, false })
+        {
+            foreach (var edge in database.ReadEdges(card.Id, outgoing))
+            {
+                var neighbour = database.FindById(outgoing ? edge.TargetId : edge.SourceId);
+                if (neighbour is not null)
+                {
+                    hops.Add(new Hop(neighbour, edge.Kind, outgoing ? Outgoing : Incoming));
+                }
+            }
+        }
+
+        return hops
+            .OrderBy(hop => hop.Card.Name, StringComparer.Ordinal)
+            .ThenBy(hop => hop.Kind, StringComparer.Ordinal)
+            .ThenBy(hop => hop.Direction, StringComparer.Ordinal)
+            .ThenBy(hop => hop.Card.Id, StringComparer.Ordinal)
+            .ToList();
+    }
+
     private static List<List<NeighbourNode>> Expand(SqliteRetrievalDatabase database, RetrievalCard source, int depth)
     {
-        var visited = new HashSet<string>(StringComparer.Ordinal) { source.Name };
+        var visited = new HashSet<string>(StringComparer.Ordinal) { source.Id };
         var layers = new List<List<NeighbourNode>>();
         var frontier = new List<RetrievalCard> { source };
 
@@ -206,19 +244,16 @@ internal static class NeighborsCommand
             var nextFrontier = new List<RetrievalCard>();
             foreach (var current in frontier)
             {
-                foreach (var name in current.Related)
+                foreach (var adjacent in Adjacent(database, current))
                 {
-                    if (!visited.Add(name) || visited.Count > MaxVisitedNodes)
+                    if (visited.Count >= MaxVisitedNodes || !visited.Add(adjacent.Card.Id))
                     {
                         continue;
                     }
 
-                    var resolved = ResolveByName(database, name);
-                    nextLayer.Add(new NeighbourNode(name, resolved?.Kind, resolved?.RelativePath));
-                    if (resolved is not null)
-                    {
-                        nextFrontier.Add(resolved);
-                    }
+                    nextLayer.Add(new NeighbourNode(
+                        adjacent.Card.Name, adjacent.Card.Kind, adjacent.Card.RelativePath, adjacent.Kind, adjacent.Direction, current.Name));
+                    nextFrontier.Add(adjacent.Card);
                 }
             }
 
@@ -234,15 +269,17 @@ internal static class NeighborsCommand
         return layers;
     }
 
-    private static PathResult FindPath(SqliteRetrievalDatabase database, RetrievalCard source, string targetName, int maxDepth)
+    // Breadth-first over edges in either direction; returns the steps of a shortest chain, or null when none exists
+    // within the depth. An empty list means the two are the same card.
+    private static List<PathStep>? FindPath(SqliteRetrievalDatabase database, RetrievalCard source, RetrievalCard target, int maxDepth)
     {
-        if (string.Equals(source.Name, targetName, StringComparison.OrdinalIgnoreCase))
+        if (source.Id == target.Id)
         {
-            return new PathResult([source.Name], Found: true, maxDepth);
+            return [];
         }
 
-        var visited = new HashSet<string>(StringComparer.Ordinal) { source.Name };
-        var parent = new Dictionary<string, string>(StringComparer.Ordinal);
+        var parent = new Dictionary<string, (RetrievalCard From, Hop Via)>(StringComparer.Ordinal);
+        var visited = new HashSet<string>(StringComparer.Ordinal) { source.Id };
         var queue = new Queue<(RetrievalCard Card, int Depth)>();
         queue.Enqueue((source, 0));
 
@@ -254,87 +291,61 @@ internal static class NeighborsCommand
                 continue;
             }
 
-            foreach (var name in current.Related)
+            foreach (var adjacent in Adjacent(database, current))
             {
-                if (!visited.Add(name))
+                if (!visited.Add(adjacent.Card.Id))
                 {
                     continue;
                 }
 
-                parent[name] = current.Name;
-                if (string.Equals(name, targetName, StringComparison.OrdinalIgnoreCase))
+                parent[adjacent.Card.Id] = (current, adjacent);
+                if (adjacent.Card.Id == target.Id)
                 {
-                    var chain = new List<string> { name };
-                    var cursor = current.Name;
-                    while (!string.Equals(cursor, source.Name, StringComparison.Ordinal))
+                    var steps = new List<PathStep>();
+                    var cursor = adjacent.Card.Id;
+                    while (cursor != source.Id)
                     {
-                        chain.Add(cursor);
-                        cursor = parent[cursor];
+                        var (from, via) = parent[cursor];
+                        steps.Add(new PathStep(from.Name, via.Card.Name, via.Kind, via.Direction));
+                        cursor = from.Id;
                     }
 
-                    chain.Add(source.Name);
-                    chain.Reverse();
-                    return new PathResult(chain, Found: true, maxDepth);
+                    steps.Reverse();
+                    return steps;
                 }
 
-                if (ResolveByName(database, name) is { } resolved)
-                {
-                    queue.Enqueue((resolved, currentDepth + 1));
-                }
+                queue.Enqueue((adjacent.Card, currentDepth + 1));
             }
         }
 
-        return new PathResult([], Found: false, maxDepth);
+        return null;
     }
 
-    private static ExplainResult Explain(SqliteRetrievalDatabase database, RetrievalCard source, string targetName, int maxDepth)
-    {
-        var direct = source.Related.Any(name => string.Equals(name, targetName, StringComparison.OrdinalIgnoreCase));
-        if (direct)
-        {
-            return new ExplainResult(
-                source.Name,
-                targetName,
-                Connected: true,
-                Hops: 1,
-                "Named in each other's recorded reader/read relationship. This kernel does not yet record which " +
-                "direction or kind (calls, references, renders) — only that a connection was observed.");
-        }
-
-        var path = FindPath(database, source, targetName, maxDepth);
-        return path.Found
+    private static ExplainResult Explain(RetrievalCard source, RetrievalCard target, List<PathStep>? steps, int maxDepth) =>
+        steps is null
             ? new ExplainResult(
-                source.Name,
-                targetName,
-                Connected: true,
-                path.Chain.Count - 1,
-                $"Reachable only through {path.Chain.Count - 2} intermediate name(s); precision drops with distance, " +
-                "since each hop is itself an unqualified reader/read relationship.")
+                source.Name, target.Name, Connected: false, Hops: null, [],
+                $"No recorded calls, references, renders, inherits, implements, or contains relationship connects them within {maxDepth} hop(s).")
             : new ExplainResult(
-                source.Name,
-                targetName,
-                Connected: false,
-                Hops: null,
-                $"No recorded reader/read relationship connects them within {maxDepth} hop(s).");
-    }
+                source.Name, target.Name, Connected: true, steps.Count, steps,
+                steps.Count == 0
+                    ? "They are the same declaration."
+                    : steps.Count == 1
+                        ? "Directly related; the step shows the observed relationship and its direction."
+                        : $"Connected through {steps.Count - 1} intermediate declaration(s); each step is an observed relationship.");
 
-    private static RetrievalCard? ResolveByName(SqliteRetrievalDatabase database, string name)
-    {
-        var matches = database.FindByExactName(KnownCardKinds.Symbol, name);
-        if (matches.Count == 1)
-        {
-            return matches[0];
-        }
+    private sealed record Hop(RetrievalCard Card, string Kind, string Direction);
 
-        matches = database.FindByExactName(KnownCardKinds.Contract, name);
-        return matches.Count == 1 ? matches[0] : null;
-    }
+    private sealed record NeighbourNode(string Name, string Kind, string RelativePath, string Via, string Direction, string From);
 
-    private sealed record NeighbourNode(string Name, string? Kind, string? RelativePath);
+    private sealed record PathStep(string From, string To, string Kind, string Direction);
 
-    private sealed record PathResult(IReadOnlyList<string> Chain, bool Found, int MaxDepth);
+    private sealed record PathResult(bool Found, IReadOnlyList<PathStep> Steps, int MaxDepth);
 
-    private sealed record ExplainResult(string Source, string Target, bool Connected, int? Hops, string Note);
+    private sealed record ExplainResult(string Source, string Target, bool Connected, int? Hops, IReadOnlyList<PathStep> Steps, string Note);
+
+    private static string Describe(string kind, string direction, string name) =>
+        direction == Outgoing ? $"{kind} -> {name}" : $"{kind} <- {name}";
 
     private static string RenderLayers(RetrievalCard source, List<List<NeighbourNode>> layers, bool compact)
     {
@@ -342,7 +353,7 @@ internal static class NeighborsCommand
         builder.Append("neighbors of ").AppendLine(source.Name);
         if (layers.Count == 0)
         {
-            builder.Append("(none recorded)");
+            builder.Append("(no recorded relationships)");
             return builder.ToString();
         }
 
@@ -356,32 +367,39 @@ internal static class NeighborsCommand
             builder.Append("hop ").Append(hop + 1).AppendLine(":");
             foreach (var node in layers[hop])
             {
-                builder.Append("  ").Append(node.Name);
-                if (node.Kind is not null)
+                builder.Append("  ").Append(Describe(node.Via, node.Direction, node.Name));
+                if (hop > 0)
                 {
-                    builder.Append("  [").Append(node.Kind).Append("] ").Append(node.RelativePath);
-                }
-                else
-                {
-                    builder.Append("  (name only; does not resolve to a card)");
+                    builder.Append(" (via ").Append(node.From).Append(')');
                 }
 
-                builder.AppendLine();
+                builder.Append("  [").Append(node.Kind).Append("] ").AppendLine(node.RelativePath);
             }
         }
 
         return builder.ToString().TrimEnd();
     }
 
-    private static string RenderPath(PathResult result) =>
+    private static string RenderSteps(string start, IReadOnlyList<PathStep> steps)
+    {
+        var builder = new StringBuilder(start);
+        foreach (var step in steps)
+        {
+            builder.Append(step.Direction == Outgoing ? $" --{step.Kind}--> " : $" <--{step.Kind}-- ").Append(step.To);
+        }
+
+        return builder.ToString();
+    }
+
+    private static string RenderPath(RetrievalCard source, PathResult result) =>
         result.Found
-            ? string.Join(" -> ", result.Chain)
+            ? RenderSteps(source.Name, result.Steps)
             : $"no path found within {result.MaxDepth} hop(s)";
 
     private static string RenderExplain(ExplainResult result) =>
         result.Connected
-            ? $"{result.Source} -> {result.Target}: connected ({result.Hops} hop(s)). {result.Note}"
-            : $"{result.Source} -> {result.Target}: not connected. {result.Note}";
+            ? $"{RenderSteps(result.Source, result.Steps)}: connected ({result.Hops} hop(s)). {result.Note}"
+            : $"{result.Source} / {result.Target}: not connected. {result.Note}";
 
     private static string ResolveIndexPath(string kernelPath)
     {

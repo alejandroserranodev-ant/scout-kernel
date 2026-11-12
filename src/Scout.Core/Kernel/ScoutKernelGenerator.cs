@@ -120,7 +120,8 @@ public static class ScoutKernelGenerator
         }
 
         var cards = RetrievalCardCompiler.Compile(structural, intelligence, FileVocabulary.Build(contents));
-        var index = RetrievalIndex.Build(cards, new LexicalEmbeddingModel());
+        var index = RetrievalIndex.Build(cards, new LexicalEmbeddingModel())
+            .WithEdges(RetrievalEdges.Build(structural, intelligence, cards));
         if (denseModel is not null)
         {
             var vectors = await denseModel
