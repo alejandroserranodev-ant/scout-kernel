@@ -49,6 +49,18 @@ public sealed class RetrievalIndex
     public DenseIndex? Dense { get; private init; }
 
     /// <summary>
+    /// Gets the typed, directed edges between cards. Empty unless <see cref="WithEdges"/> supplied them.
+    /// </summary>
+    public IReadOnlyList<RetrievalEdge> Edges { get; private init; } = [];
+
+    /// <summary>Returns this index carrying <paramref name="edges"/>.</summary>
+    public RetrievalIndex WithEdges(IReadOnlyList<RetrievalEdge> edges)
+    {
+        ArgumentNullException.ThrowIfNull(edges);
+        return new RetrievalIndex(ModelId, ModelKind, [.. cards], [.. vectors], Vocabulary, embedder) { Dense = Dense, Edges = edges };
+    }
+
+    /// <summary>
     /// Builds an index over a corpus.
     /// </summary>
     /// <param name="cards">The corpus.</param>
@@ -88,7 +100,7 @@ public sealed class RetrievalIndex
             throw new ArgumentException("Dense vectors must be aligned with the cards.", nameof(dense));
         }
 
-        return new RetrievalIndex(ModelId, ModelKind, [.. cards], [.. vectors], Vocabulary, embedder) { Dense = dense };
+        return new RetrievalIndex(ModelId, ModelKind, [.. cards], [.. vectors], Vocabulary, embedder) { Dense = dense, Edges = Edges };
     }
 
     /// <summary>

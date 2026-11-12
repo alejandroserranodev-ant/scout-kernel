@@ -64,15 +64,17 @@ public static class McpServer
             """),
         new(
             "scout_neighbors",
-            "Provisional: the reader/read names a card already records as connected to it. Pass 'path' for " +
-            "the shortest recorded chain to another name, or 'explain' for why (or whether) two names connect.",
+            "Typed, directed relationships (calls, references, renders, inherits, implements) around a declaration. " +
+            "Pass 'impact' for what depends on it (the blast radius of changing it), 'path' for the shortest chain to " +
+            "another name, or 'explain' for how (or whether) two names connect.",
             """
             {
               "type": "object",
               "properties": {
                 "symbol": { "type": "string", "description": "The symbol or contract name to inspect." },
                 "kernel": { "type": "string", "description": "Path to the compiled Scout Kernel." },
-                "depth": { "type": "integer", "description": "Maximum hops to follow (default 1)." },
+                "depth": { "type": "integer", "description": "Maximum hops to follow (default 1; 3 with impact)." },
+                "impact": { "type": "boolean", "description": "List what depends on the symbol, transitively." },
                 "path": { "type": "string", "description": "Target name: find the shortest recorded chain to it." },
                 "explain": { "type": "string", "description": "Target name: explain whether/how it connects." }
               },

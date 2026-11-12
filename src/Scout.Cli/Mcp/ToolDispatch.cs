@@ -34,6 +34,13 @@ internal static class ToolDispatch
         var args = new List<string> { Require(arguments, "symbol") };
         AddOption(args, arguments, "kernel", "--kernel", required: true);
         AddOption(args, arguments, "depth", "--depth");
+        if (arguments["impact"]?.GetValue<bool>() == true)
+        {
+            // "What depends on this" is the same question as neighbors, asked backwards; keeping it a mode of
+            // scout_neighbors holds the server to its three-tool budget.
+            return RunAsync(ImpactCommand.RunAsync, args, cancellationToken);
+        }
+
         AddOption(args, arguments, "path", "--path");
         AddOption(args, arguments, "explain", "--explain");
         return RunAsync(NeighborsCommand.RunAsync, args, cancellationToken);
