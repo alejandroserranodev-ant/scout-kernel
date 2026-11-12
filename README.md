@@ -266,8 +266,9 @@ dotnet run --project src/Scout.Cli -- read "<symbol>"|"<file>:<start>-<end>" --k
 
 `brief` runs one retrieval call and returns edit sites (file, symbol, line, the names connected to it) within a
 token budget (`--max-tokens`, default 600) — the lowest-priority sites are dropped to fit, rather than
-returning something larger than asked for. It says plainly that it checks no rule mechanically yet, instead of
-silently omitting a rules section (that lands in a later phase).
+returning something larger than asked for. It also lists the repository's active rules whose scope touches those
+files (at most 5, with a shortened quote), and always states what its rules section means: none defined, none
+applicable, or how many apply.
 
 `read` returns exactly the lines a symbol or a `file:start-end` range names, read from the live repository —
 a kernel never stores source bodies. `--repository` defaults to the kernel path with its trailing `.scout`
@@ -276,6 +277,28 @@ line numbers may no longer match.
 
 `neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"]` is provisional: it
 walks the reader/read names a card already records. It cannot tell edge kind or direction.
+
+### Rules a machine can check
+
+```text
+scout rule propose <id> --scope <globs> --modality must|must_not|should --type forbidden-call|naming|layering|linked-test --value <pattern> --quote "<verbatim>" --source <path#anchor>
+scout rule list | show <id> | approve <id> | retire <id>
+scout check [--staged] [--json]
+```
+
+Rules live in the repository, one file each, at `.scout/rules/<id>.json`: a scope (globs), a modality, one mechanical
+check, the verbatim sentence the rule came from with its source, a state (`proposed`, `active`, `retired`) and a review
+date. The schema is closed: an unknown property, an unknown value, a missing quote, or an invalid pattern is an error.
+Checks are textual or path tests, so a violation is something a reader can verify by opening the file:
+`forbidden-call` (a regex must not match any line), `naming` (the file name must match a regex), `layering` (no
+dependency line may match a regex), `linked-test` (a test file must exist at a templated path, with `{dir}`, `{name}`,
+`{ext}`). Rules derived from a document or a regulation start as `proposed` and are never enforced on their own:
+`approve` needs a person typing the rule id at a terminal, so a script or an agent cannot activate one. Mechanical parts
+of a regulation belong in the project's own tests or schemas, referenced through `linked-test`; interpretive text stays
+a quoted rule with a review date.
+
+`scout check` exits 1 when a `must`/`must_not` rule is broken (a `should` rule only warns), so it can gate a commit or a
+CI job; `--staged` checks only what is staged. Rules are JSON, not YAML, to keep Scout free of a parser dependency.
 
 ### Review the database schema
 

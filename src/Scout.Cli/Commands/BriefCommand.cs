@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Scout.Cli.Rules;
 using Scout.Core.Retrieval;
 using Scout.Retrieval.Sqlite;
 
@@ -13,8 +14,9 @@ namespace Scout.Cli.Commands;
 /// trips an agent would otherwise need to reach the same answer.
 /// </summary>
 /// <remarks>
-/// A brief never includes a rule, because this kernel does not check any mechanically yet; it says so rather
-/// than silently omitting the section, so a caller does not read the omission as "no rules apply."
+/// A brief includes only the active rules whose scope touches the files it names (at most
+/// <see cref="MaxRulesInBrief"/>, each with a shortened quote), and always says what the rules section means —
+/// none defined, none applicable, or some — so a caller never reads an omission as "no rules apply."
 /// </remarks>
 internal static class BriefCommand
 {
@@ -26,6 +28,10 @@ internal static class BriefCommand
     private const int DefaultMaxTokens = 600;
     private const int CharsPerTokenApprox = 4;
     private const int MaxNeighboursPerSite = 6;
+    private const int MaxRulesInBrief = 5;
+    private const int MaxRuleQuoteChars = 160;
+    private const string NoRulesDefined = "No active rules are defined for this repository.";
+    private const string NoRuleApplies = "No active rule applies to these files.";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
@@ -141,15 +147,59 @@ internal static class BriefCommand
 
         var sites = result.Hits.Select(hit => BuildSite(hit, repositoryRoot)).ToList();
         var budgetChars = maxTokens * CharsPerTokenApprox;
-        var truncatedCount = ApplyBudget(sites, budgetChars, compact);
+        var rules = FindApplicableRules(repositoryRoot, sites, out var rulesStatus);
+        var truncatedCount = ApplyBudget(sites, rules, rulesStatus, budgetChars, compact);
 
         await output.WriteLineAsync(
             asJson
-                ? RenderJson(task, sites, truncatedCount)
-                : RenderText(task, sites, truncatedCount, compact))
+                ? RenderJson(task, sites, truncatedCount, rules, rulesStatus)
+                : RenderText(task, sites, truncatedCount, compact, rules, rulesStatus))
             .ConfigureAwait(false);
         return ExitCodes.Success;
     }
+
+    private sealed record BriefRule(string Id, string Modality, string Quote, string Source);
+
+    private static BriefRule[] FindApplicableRules(string? repositoryRoot, IReadOnlyList<EditSite> sites, out string status)
+    {
+        if (repositoryRoot is null)
+        {
+            status = NoRulesDefined;
+            return [];
+        }
+
+        IReadOnlyList<RuleDefinition> all;
+        try
+        {
+            all = RuleStore.LoadAll(repositoryRoot);
+        }
+        catch (RuleSchemaException exception)
+        {
+            status = $"Rules could not be read: {exception.Message}";
+            return [];
+        }
+
+        var active = all.Where(rule => rule.State == RuleVocabulary.Active).ToArray();
+        if (active.Length == 0)
+        {
+            status = NoRulesDefined;
+            return [];
+        }
+
+        var paths = sites.Select(site => site.RelativePath).Where(path => path.Length > 0).Distinct(StringComparer.Ordinal).ToArray();
+        var applicable = active
+            .Where(rule => paths.Any(path => RuleChecker.AppliesTo(rule, path)))
+            .Take(MaxRulesInBrief)
+            .Select(rule => new BriefRule(rule.Id, rule.Modality, Shorten(rule.Quote.Text), rule.Quote.Source))
+            .ToArray();
+        status = applicable.Length == 0
+            ? NoRuleApplies
+            : $"{applicable.Length} active rule(s) apply; `scout check` verifies them.";
+        return applicable;
+    }
+
+    private static string Shorten(string text) =>
+        text.Length <= MaxRuleQuoteChars ? text : text[..MaxRuleQuoteChars].TrimEnd() + "...";
 
     private sealed record EditSite(
         string Kind,
@@ -204,10 +254,10 @@ internal static class BriefCommand
 
     // Drops the least important sites first until the rendered brief fits the caller's token budget, rather
     // than silently handing back something larger than asked for.
-    private static int ApplyBudget(List<EditSite> sites, int budgetChars, bool compact)
+    private static int ApplyBudget(List<EditSite> sites, IReadOnlyList<BriefRule> rules, string rulesStatus, int budgetChars, bool compact)
     {
         var truncated = 0;
-        while (sites.Count > 1 && EstimateChars(sites, compact) > budgetChars)
+        while (sites.Count > 1 && EstimateChars(sites, rules, rulesStatus, compact) > budgetChars)
         {
             sites.RemoveAt(sites.Count - 1);
             truncated++;
@@ -216,8 +266,8 @@ internal static class BriefCommand
         return truncated;
     }
 
-    private static int EstimateChars(IReadOnlyList<EditSite> sites, bool compact) =>
-        RenderText("", sites, 0, compact).Length;
+    private static int EstimateChars(IReadOnlyList<EditSite> sites, IReadOnlyList<BriefRule> rules, string rulesStatus, bool compact) =>
+        RenderText("", sites, 0, compact, rules, rulesStatus).Length;
 
     private static string? InferRepositoryRoot(string kernelPath)
     {
@@ -233,7 +283,8 @@ internal static class BriefCommand
         return Directory.Exists(full) ? Path.Combine(full, IndexRelativePath) : full;
     }
 
-    private static string RenderJson(string task, IReadOnlyList<EditSite> sites, int truncatedCount) =>
+    private static string RenderJson(
+        string task, IReadOnlyList<EditSite> sites, int truncatedCount, IReadOnlyList<BriefRule> rules, string rulesStatus) =>
         JsonSerializer.Serialize(
             new
             {
@@ -249,12 +300,13 @@ internal static class BriefCommand
                     site.Stale
                 }),
                 TruncatedCount = truncatedCount,
-                Rules = Array.Empty<string>(),
-                RulesStatus = "This kernel checks no rule mechanically yet."
+                Rules = rules,
+                RulesStatus = rulesStatus
             },
             JsonOptions);
 
-    private static string RenderText(string task, IReadOnlyList<EditSite> sites, int truncatedCount, bool compact)
+    private static string RenderText(
+        string task, IReadOnlyList<EditSite> sites, int truncatedCount, bool compact, IReadOnlyList<BriefRule> rules, string rulesStatus)
     {
         var builder = new StringBuilder();
         if (task.Length > 0)
@@ -303,7 +355,12 @@ internal static class BriefCommand
             builder.AppendLine().Append(truncatedCount).Append(" lower-priority site(s) dropped to fit the token budget; raise --max-tokens to see them.").AppendLine();
         }
 
-        builder.AppendLine().Append("rules: this kernel checks no rule mechanically yet.");
+        builder.AppendLine().Append("rules: ").AppendLine(rulesStatus);
+        foreach (var rule in rules)
+        {
+            builder.Append("  ").Append(rule.Id).Append(" (").Append(rule.Modality).Append("): \"").Append(rule.Quote).Append("\" [").Append(rule.Source).AppendLine("]");
+        }
+
         return builder.ToString().TrimEnd();
     }
 

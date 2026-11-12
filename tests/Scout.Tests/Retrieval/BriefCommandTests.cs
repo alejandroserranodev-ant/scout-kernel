@@ -35,7 +35,7 @@ public sealed class BriefCommandTests
         var sites = answer.GetProperty("Sites");
         Assert.True(sites.GetArrayLength() > 0);
         Assert.Equal(
-            "This kernel checks no rule mechanically yet.",
+            "No active rules are defined for this repository.",
             answer.GetProperty("RulesStatus").GetString());
         Assert.Equal(0, answer.GetProperty("Rules").GetArrayLength());
     }

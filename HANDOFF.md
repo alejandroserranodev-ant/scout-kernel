@@ -148,7 +148,7 @@ dotnet test                                                                     
 | 1 | Token/latency benchmark, 21-task synthetic manifest, manual protocol | Done (`60db6f1`). Honest negative result on the toy corpus |
 | 2 | Latency profile, `brief`, `read`, staleness guard, caps | Done (`b92fc29`), 110/110 tests green |
 | 3 | Install and MCP | Done (see section 6). MCP server, `neighbors`, `scout install claude`, skill resync, schema cost measured (~528 tokens) |
-| 4 | Mechanically checkable rules | Not started |
+| 4 | Mechanically checkable rules | Done in minimal form: `.scout/rules/*.json` (JSON, not YAML), closed schema, 4 check types, `scout rule`, `scout check [--staged]`, `brief` includes applicable active rules. Not done: wiring `check --staged` as a commit hook (Phase 9) |
 | 5 | Graph (`edges` table) and `KERNEL_REPORT.md` | Not started |
 | 6 | Incremental update, git hook, real freshness | Not started |
 | 7 | Recall (glossary, tuning/validation split) | Not started |

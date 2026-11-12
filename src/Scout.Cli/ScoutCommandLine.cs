@@ -16,6 +16,8 @@ internal static class ScoutCommandLine
           scout read "<symbol>"|"<file>:<start>-<end>" --kernel <path> [--repository <path>] [--max-lines <n>] [--json] [--format compact]
           scout neighbors "<symbol>" --kernel <path> [--depth <n>] [--path "<target>"] [--explain "<target>"] [--json] [--format compact]
           scout mcp
+          scout check [--repository <path>] [--staged] [--limit <n>] [--json]
+          scout rule list|show|propose|approve|retire ...
           scout db check <repository> [--connection-env <VAR>] [--psql <command>] [--limit <n>] [--json]
           scout install claude --kernel <path> [--project|--user] [--hook-matcher <pattern>] [--dry-run] [--uninstall]
           scout --version
@@ -69,6 +71,17 @@ internal static class ScoutCommandLine
           three tools (scout_brief, scout_read, scout_neighbors) — the same implementation the CLI commands
           above use, so there is one tested behavior, not two. Register it with `claude mcp add scout -- scout
           mcp` or a `.mcp.json` entry of the same shape; see `scout install claude`.
+
+        check
+          Runs the repository's active rules (.scout/rules/*.json) over its files, or only the staged ones with
+          --staged. Each violation names the file, the line, the rule, and the rule's own quoted text. Exit code 1
+          when a must/must_not rule is broken (a should rule only warns), so it can gate a commit or a CI job.
+
+        rule
+          Manages rules. Each one has a scope (globs), a modality (must, must_not, should), one mechanical check
+          (forbidden-call, naming, layering, linked-test), a verbatim quote with its source, a state (proposed,
+          active, retired) and a review date. `propose` only ever creates a proposal. `approve` makes it
+          enforceable and needs a person typing the rule id at a terminal; a script or an agent cannot do it.
 
         db check
           Reviews the SQL files' schema declarations (tables, columns, row level security, policies) and, whenever
@@ -135,6 +148,10 @@ internal static class ScoutCommandLine
                 NeighborsCommand.Verb => await NeighborsCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 "mcp" => await RunMcpAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                RuleCommand.Verb => await RuleCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
+                CheckCommand.Verb => await CheckCommand
+                    .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 DbCommand.Verb => await DbCommand
                     .RunAsync(rest, output, error, cancellationToken).ConfigureAwait(false),
                 InstallCommand.Verb => await InstallCommand
