@@ -70,8 +70,12 @@ function printSummary(summary) {
   console.log(`Tasks:                 ${summary.taskCount}`);
   console.log(`Arm A hit rate:         ${(summary.armAHitRate * 100).toFixed(1)}%`);
   console.log(`Arm B hit rate:         ${(summary.armBHitRate * 100).toFixed(1)}%`);
+  console.log(`Arm A mean file recall: ${(summary.armAMeanRecall * 100).toFixed(1)}%`);
+  console.log(`Arm B mean file recall: ${(summary.armBMeanRecall * 100).toFixed(1)}%`);
   console.log(`Arm A tokens (approx):  ${Math.round(summary.totalArmATokens)}`);
   console.log(`Arm B tokens (approx):  ${Math.round(summary.totalArmBTokens)}`);
+  console.log(`Ranked-grep baseline (reads the top result-limit files, equal budget):`);
+  console.log(`  hit rate ${(summary.armARankedHitRate * 100).toFixed(1)}%  mean file recall ${(summary.armARankedMeanRecall * 100).toFixed(1)}%  tokens ${Math.round(summary.totalArmARankedTokens)} (Scout: ${Math.round(summary.totalArmBTokens)})`);
   console.log(`Token savings rate:     ${(summary.savingsRate * 100).toFixed(1)}%`);
   console.log(`Arm B avg latency:      ${summary.averageArmBLatencyMs.toFixed(1)}ms`);
   console.log('');
@@ -104,8 +108,9 @@ function main() {
     );
   }
 
-  if (!Array.isArray(manifest.tasks) || manifest.tasks.length < 20) {
-    fail(`manifest at '${manifestPath}' must declare at least 20 tasks (has ${manifest.tasks?.length ?? 0})`);
+  const minimumTasks = manifest.minimumTaskCount ?? config.minimumTaskCount;
+  if (!Array.isArray(manifest.tasks) || manifest.tasks.length < minimumTasks) {
+    fail(`manifest at '${manifestPath}' must declare at least ${minimumTasks} tasks (has ${manifest.tasks?.length ?? 0})`);
   }
 
   const repositoryRoot = resolveFromDir(manifestDir, manifest.repositoryPath);

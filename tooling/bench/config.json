@@ -2,6 +2,7 @@
   "charsPerToken": 4,
   "resultLimit": 8,
   "minimumTokenSavingsRate": 0.3,
+  "minimumTaskCount": 20,
   "grepResultCharsPerMatch": 80,
   "armAChunkThresholdChars": 4000,
   "armAChunkSizeChars": 2000,

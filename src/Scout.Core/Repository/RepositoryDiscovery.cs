@@ -66,6 +66,7 @@ public sealed class RepositoryDiscovery
         var paths = EnumerateInputFiles(rootPath, diagnostics, cancellationToken)
             .Order(StringComparer.Ordinal)
             .ToArray();
+        paths = await RemoveGitIgnoredAsync(rootPath, paths, diagnostics, cancellationToken).ConfigureAwait(false);
 
         var files = new List<DiscoveredFile>(paths.Length);
         foreach (var relativePath in paths)
@@ -208,6 +209,56 @@ public sealed class RepositoryDiscovery
         {
             diagnostics.Add($"Git revision was unavailable: {exception.Message}");
             return SourceRevision.Unknown;
+        }
+    }
+
+    // Build output and caches a project's own .gitignore already excludes (dist, coverage, generated bundles) are not
+    // part of its source: indexing them buries real declarations under minified code. Outside a git repository, or
+    // if git cannot answer, nothing is filtered.
+    private static async Task<string[]> RemoveGitIgnoredAsync(
+        string rootPath,
+        string[] paths,
+        List<string> diagnostics,
+        CancellationToken cancellationToken)
+    {
+        if (paths.Length == 0)
+        {
+            return paths;
+        }
+
+        try
+        {
+            var result = await RunGitAsync(
+                rootPath,
+                ["ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"],
+                cancellationToken).ConfigureAwait(false);
+            if (result.ExitCode != 0)
+            {
+                return paths;
+            }
+
+            var ignored = result.StandardOutput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (ignored.Length == 0)
+            {
+                return paths;
+            }
+
+            var ignoredDirectories = ignored.Where(entry => entry.EndsWith('/')).ToArray();
+            var ignoredFiles = ignored.Where(entry => !entry.EndsWith('/')).ToHashSet(StringComparer.Ordinal);
+            var kept = paths
+                .Where(path => !ignoredFiles.Contains(path)
+                    && !ignoredDirectories.Any(directory => path.StartsWith(directory, StringComparison.Ordinal)))
+                .ToArray();
+            if (kept.Length != paths.Length)
+            {
+                diagnostics.Add($"Skipped {paths.Length - kept.Length} file(s) ignored by the repository's .gitignore.");
+            }
+
+            return kept;
+        }
+        catch (Exception exception) when (exception is Win32Exception or IOException or InvalidOperationException)
+        {
+            return paths;
         }
     }
 

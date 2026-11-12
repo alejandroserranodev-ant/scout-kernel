@@ -22,15 +22,19 @@ grep+read (about -85.6% "savings", equal 90.5% hit rate;
 the regime Scout is for. The real verdict still needs a large local corpus plus the manual
 Claude Code protocol (section 7, step A). Do not claim savings until that exists.
 
-**Real-repository result (2026-11-12, decision rule tripped):** a 637-file TypeScript web app (499 analyzed
-source files, 25 tasks taken from its own commit history: subject = query, files changed = expected files;
-manifest kept git-ignored in `tooling/bench/local/`). Hit rate: Arm A 80%, Arm B (`scout query`, top 8) 20%.
-The token "savings" (~99.8%) is not meaningful: the simulated Arm A reads every file matching any query word,
-which no real agent does. The accuracy gap is the real signal and fails the "equal or better accuracy" half
-of the rule. Caveats before concluding retrieval is hopeless: queries were Spanish commit subjects (check the
-language data packs and stopwords), commit subjects are not what an agent would type, and the manual Claude
-Code protocol (section 7, step A) has still NOT been run. Work beyond Phase 3 is paused until that result and
-the user decide. `listSourceFiles` in the bench now respects `.gitignore` (git repos) like a real grep would.
+**Real-repository results (2026-11-12, decision rule not passed):** two real repositories, tasks taken from their own
+commit history (subject = query, files changed = expected files; manifests git-ignored in `tooling/bench/local/`):
+a 637-file TypeScript web app (25 tasks, Spanish subjects) and a 305-file TypeScript/SQL backend+web app (13 tasks,
+English subjects). Mean per-file recall of the top-8 results: Scout 34.7% / 49.2%; ranked-grep baseline (reads the 8
+files matching the most query terms, same budget) 28.7% / 68.5%. Tokens: Scout returns pointers (~1.5k per query) while
+the baseline reads whole files (~45k-90k per task), so token savings are large, but Scout's cost excludes the follow-up
+`read`/`brief` calls an agent still needs. The original Arm A (reads every match) is a strawman: do not quote its
+~99% savings. Language is NOT the cause (English repo behaves the same); `--kind file` barely helps. Likely cause:
+cards index identifiers, not body text or comments, so a task phrased in prose ("serve API docs with Swagger UI")
+misses a file whose symbols are named differently, which grep finds. Fixed on the way: discovery now respects
+`.gitignore` (build output such as `dist/` was ranking first); bench Arm A also respects it; `minimumTaskCount` is
+configurable; bench reports per-file recall and a ranked-grep baseline. The manual Claude Code protocol (section 7,
+step A) has still NOT been run; it is the real verdict.
 
 ## 2. Hard rules (carry these into every change)
 
