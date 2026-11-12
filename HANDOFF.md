@@ -44,6 +44,19 @@ would just be overfitted; Phase 7 requires a tuning/validation split). Part of t
 commits touch files (config, entry points) their subject never names, which caps grep too. The decision still needs the
 manual protocol.
 
+**Quality A/B pilot (2026-11-12, inconclusive-to-negative):** 3 real tasks from a real repository's history (small
+backend features), each implemented from the parent commit by two independent fresh agents, one without Scout and one
+with Scout installed (kernel, `scout install claude`, `brief`/`read`/`check`, two active rules quoted from the repo's
+AGENTS.md). Both arms read AGENTS.md first. Tokens (harness-reported): 259.7k without, 256.2k with (-1.4%, noise).
+Mechanical verifiers (type check, full test suite, the repo's kernel verifier, `scout check`): identical, all green.
+Blind LLM review of anonymized diffs against the repo's norms: tasks 1 and 2 favored the no-Scout diff, task 3 was a
+tie; the with-Scout arm had 2 majors (a missing HANDOFF update; a registry that accepts prototype keys) vs 0, minors
+about equal (13 vs 15). Both majors are run-to-run variance, not evidence about Scout: all three with-Scout agents
+reported barely using it, because the repo's AGENTS.md plus grep already located everything, and the two active rules
+were already enforced by the repo's own architecture tests. n=3, one reviewer per task, single run: this shows no
+benefit, not a proven harm. Scout is most likely to matter where there is no AGENTS.md-style guide, or the repo is
+much larger; test that case before building more.
+
 ## 2. Hard rules (carry these into every change)
 
 1. Nothing hardcoded: paths, thresholds, limits, word lists, hook matchers, messages, token
