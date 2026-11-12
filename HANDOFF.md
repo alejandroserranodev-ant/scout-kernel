@@ -22,6 +22,16 @@ grep+read (about -85.6% "savings", equal 90.5% hit rate;
 the regime Scout is for. The real verdict still needs a large local corpus plus the manual
 Claude Code protocol (section 7, step A). Do not claim savings until that exists.
 
+**Real-repository result (2026-11-12, decision rule tripped):** a 637-file TypeScript web app (499 analyzed
+source files, 25 tasks taken from its own commit history: subject = query, files changed = expected files;
+manifest kept git-ignored in `tooling/bench/local/`). Hit rate: Arm A 80%, Arm B (`scout query`, top 8) 20%.
+The token "savings" (~99.8%) is not meaningful: the simulated Arm A reads every file matching any query word,
+which no real agent does. The accuracy gap is the real signal and fails the "equal or better accuracy" half
+of the rule. Caveats before concluding retrieval is hopeless: queries were Spanish commit subjects (check the
+language data packs and stopwords), commit subjects are not what an agent would type, and the manual Claude
+Code protocol (section 7, step A) has still NOT been run. Work beyond Phase 3 is paused until that result and
+the user decide. `listSourceFiles` in the bench now respects `.gitignore` (git repos) like a real grep would.
+
 ## 2. Hard rules (carry these into every change)
 
 1. Nothing hardcoded: paths, thresholds, limits, word lists, hook matchers, messages, token
